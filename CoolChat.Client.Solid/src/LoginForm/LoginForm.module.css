@@ -1,0 +1,50 @@
+.LoginForm {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+
+    .FormInput {
+        display: flex;
+        flex-direction: row;
+
+        border-radius: 8px;
+        border: solid 3px var(--input-field-icon-container-background-color);
+
+        background-color: var(--input-field-icon-container-background-color);
+
+        margin-bottom: 8px;
+
+        overflow: hidden;
+
+        .FormInputIconContainer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background-color: var(--input-field-icon-container-background-color);
+            color: var(--input-field-icon-container-color);
+
+            padding: 8px;
+
+            .FormInputIcon {
+                color: inherit;
+            }
+        }
+
+        input {
+            padding: 8px 16px 8px 8px;
+            border: none;
+            border-radius: 8px 0px 0px 8px !important;
+
+            color: var(--input-field-color);
+            background-color: var(--input-field-background-color);
+
+            font-size: 16px;
+
+            &:focus {
+                outline: none;
+            }
+        }
+    }
+}
