@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using CoolChat.Domain.Models;
@@ -9,6 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
 namespace CoolChat.Server.ASPNET.Controllers;
+
+internal class AuthenticatedResponse
+{
+    public string? Token { get; set; }
+}
 
 [ApiController]
 [Route("api/[controller]")]
@@ -36,8 +42,15 @@ public class AuthController : ControllerBase
             JwtSecurityToken tokenOptions = new(
                 issuer: "http://localhost:3000/",
                 audience: "https://localhost:3000/",
-                claims: new(),
-            )
+                claims: new List<Claim>(),
+                expires: DateTime.Now.AddMinutes(5),
+                signingCredentials: signingCredentials
+            );
+            string tokenString = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+
+            return Ok(new AuthenticatedResponse { Token = tokenString });
         }
+
+        return Unauthorized();
     }
 }

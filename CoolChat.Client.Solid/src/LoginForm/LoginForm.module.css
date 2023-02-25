@@ -1,8 +1,13 @@
 .LoginForm {
     display: flex;
     flex-direction: column;
+    align-items: center;
 
     gap: 8px;
+
+    label {
+        align-self: flex-start;
+    }
 
     .FormInput {
         display: flex;
@@ -45,6 +50,26 @@
             &:focus {
                 outline: none;
             }
+        }
+    }
+
+    .LoginError {
+        color: var(--input-field-error-color);
+    }
+
+    .LoginButton {
+        display: block;
+        margin-top: 24px;
+        padding: 8px 16px;
+        color: var(--color);
+        background-color: var(--input-field-icon-container-background-color);
+        border-radius: 8px;
+        border: none;
+
+        font-size: 1rem;
+
+        &:focus {
+            outline: none;
         }
     }
 }

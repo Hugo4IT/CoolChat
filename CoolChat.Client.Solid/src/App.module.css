@@ -5,6 +5,7 @@
     --input-field-background-color-rgb: 31, 31, 31;
     --input-field-icon-container-color-rgb: 141, 141, 141;
     --input-field-icon-container-background-color-rgb: 61, 61, 61;
+    --input-field-error-color-rgb: 189, 53, 23;
 }
 
 .App {
@@ -14,6 +15,7 @@
     --input-field-background-color: rgb(var(--input-field-background-color-rgb));
     --input-field-icon-container-color: rgb(var(--input-field-icon-container-color-rgb));
     --input-field-icon-container-background-color: rgb(var(--input-field-icon-container-background-color-rgb));
+    --input-field-error-color: rgb(var(--input-field-error-color-rgb))
 
     box-sizing: border-box;
 
