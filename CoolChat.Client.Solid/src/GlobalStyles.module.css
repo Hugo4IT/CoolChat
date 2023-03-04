@@ -1,0 +1,48 @@
+@keyframes spin {
+    0% { transform: rotateZ(0); }
+    100% { transform: rotateZ(360deg); }
+}
+
+.Button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 16px;
+    border-radius: 8px;
+    gap: 8px;
+
+    font-size: 1rem;
+
+    color: var(--button-color);
+    background-color: var(--button-background-color);
+    border: none;
+
+    transition: background-color 0.3s cubic-bezier(0.19, 1, 0.22, 1),
+                color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+                transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+    transform: none;
+
+    &:focus {
+        outline: none;
+    }
+
+    &:hover {
+        background-color: var(--button-background-color-hovered);
+        color: var(--button-color-hovered);
+
+        cursor: pointer;
+    }
+
+    &:active, &.ButtonActive {
+        background-color: var(--button-background-color-pressed);
+        color: var(--button-color-pressed);
+        transform: scale(0.95);
+    }
+}
+
+.ButtonSpinner {
+    animation: spin 2.0s linear infinite;
+}

@@ -1,0 +1,146 @@
+.Form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    gap: 16px;
+    padding: 32px;
+
+    label {
+        align-self: flex-start;
+    }
+
+    .FormSection {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+
+        .FormTextInput {
+            display: flex;
+            flex-direction: row;
+    
+            border-radius: 8px;
+            border: solid 3px var(--input-field-icon-container-background-color);
+    
+            background-color: var(--input-field-icon-container-background-color);
+    
+            overflow: hidden;
+
+            transition: background-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+                        color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    
+            .FormTextInputIconContainer {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+    
+                background-color: var(--input-field-icon-container-background-color);
+                color: var(--input-field-icon-container-color);
+
+                transition: background-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+                            color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    
+                padding: 8px 12px;
+    
+                .FormInputIcon {
+                    color: inherit;
+                }
+            }
+    
+            input, .FileInputLabel {
+                &::placeholder, &::-moz-placeholder, &::-webkit-input-placeholder {
+                    color: var(--input-field-placeholder-color-rgb);
+                }
+
+                width: calc(20ch + 20px);
+
+                padding: 8px 16px 8px 8px;
+                border: none;
+                border-radius: 6px !important;
+    
+                color: var(--input-field-color);
+                background-color: var(--input-field-background-color);
+    
+                font-size: 16px;
+    
+                &:focus {
+                    outline: none;
+                }
+            }
+
+            .FileInputLabel {
+                width: calc(20ch + 20px);
+
+                &.Unset {
+                    color: var(--input-field-placeholder-color);
+                }
+
+                &:hover {
+                    background-color: var(--button-background-color-hovered);
+                    color: var(--button-color-hovered);
+
+                    cursor: pointer;
+                }
+            }
+        }
+    
+        .FormTextInputError {
+            color: var(--input-field-error-color) !important;
+
+            align-self: flex-start;
+            font-size: 0.8em;
+
+            overflow-y: hidden;
+
+            transition: height 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+                        opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+                        margin-top 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            height: 1em;
+            opacity: 1;
+            
+            &.FormTextInputErrorHidden {
+                height: 0px;
+                opacity: 0;
+                margin-top: -8px;
+            }
+        }
+
+        &.FormSectionError {
+            .FormTextInput {
+                border-color: var(--input-field-error-background-color) !important;
+                background-color: var(--input-field-error-background-color) !important;
+            }
+
+            .FormTextInputIconContainer {
+                background-color: var(--input-field-error-background-color);
+                color: var(--input-field-error-color);
+            }
+        }
+    }
+
+    .FormButtons {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+
+        margin-top: 24px;
+
+        gap: 16px;
+    }
+
+    .FormTitle {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .PreviewImage {
+        object-fit: cover;
+        width: 160px;
+        height: 160px;
+        margin-top: 8px;
+        border-radius: 20px;
+    }
+}

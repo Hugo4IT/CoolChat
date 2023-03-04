@@ -1,67 +1,74 @@
 import { Component, createSignal, Show } from "solid-js";
-import { FaSolidAt, FaSolidKey } from 'solid-icons/fa';
+import { FaSolidKey, FaSolidUser } from 'solid-icons/fa';
 
 import styles from './LoginForm.module.css';
-import { AuthenticatedResponse } from "../interfaces/AuthenticatedResponse";
+import { login, register } from "../JwtHelper";
+import { Form } from "../Form/Form";
+import { FormTextInput } from "../Form/FormTextInput";
+import { FormButtons } from "../Form/FormButtons";
+import { FormButton } from "../Form/FormButton";
+import { FormTitle } from "../Form/FormTitle";
 
-const LoginForm: Component = () => {
-    const [usernameError, setUsernameError] = createSignal("");
-    const [passwordError, setPasswordError] = createSignal("");
-    const [invalidLogin, setInvalidLogin] = createSignal(false);
+interface LoginFormProps {
+    loginCallback: (loggedIn: boolean) => void;
+}
 
-    let usernameRef: HTMLInputElement|undefined;
-    let passwordRef: HTMLInputElement|undefined;
+export const LoginForm: Component<LoginFormProps> = (props: LoginFormProps) => {
+    const [username, setUsername] = createSignal("");
+    const [password, setPassword] = createSignal("");
+    const [usernameError, setUsernameError] = createSignal<string|undefined>();
+    const [passwordError, setPasswordError] = createSignal<string|undefined>();
+    const [loading, setLoading] = createSignal("nothing");
 
-    const loginFunction = () => {
-        let username = usernameRef!.value;
-        let password = passwordRef!.value;
+    const loginFunction = async () => {
+        if (loading() != "nothing")
+            return;
 
-        fetch("http://localhost:5010/api/Login", {
-            headers: {
-                "Content-Type": "application/json",
-            }
-        }).then(res => res.json())
-          .then((res: AuthenticatedResponse) => {
-              const token = res.token;
-              localStorage.setItem("jwt", token);
+        setLoading("login");
 
-              setInvalidLogin(false);
-          })
-          .catch(res => {
-              setInvalidLogin(true);
-              console.log(res);
-          });
+        let result = await login(username(), password());
+
+        setLoading("nothing");
+
+        if (result.success) {
+            props.loginCallback(true);
+            setLoading("main");
+        } else {
+            props.loginCallback(false);
+            setUsernameError(result.usernameError ?? undefined);
+            setPasswordError(result.passwordError ?? undefined);
+        }
+    };
+    
+    const registerFunction = async () => {
+        if (loading() != "nothing")
+            return;
+
+        setLoading("register");
+
+        let result = await register(username(), password());
+
+        setLoading("nothing");
+
+        if (result.success) {
+            props.loginCallback(true);
+            setLoading("main");
+        } else {
+            props.loginCallback(false);
+            setUsernameError(result.usernameError ?? undefined);
+            setPasswordError(result.passwordError ?? undefined);
+        }
     };
 
     return (
-        <div class={styles.LoginForm}>
-            <label for="username">Username:</label>
-            <div class={styles.FormInput}>
-                <div class={styles.FormInputIconContainer}>
-                    <FaSolidAt size={16} class={styles.FormInputIcon} />
-                </div>
-                <input type="text" name="username" id="login-form-username" ref={usernameRef} />
-            </div>
-
-            <label for="password">Password:</label>
-            <div class={styles.FormInput}>
-                <div class={styles.FormInputIconContainer}>
-                    <FaSolidKey size={16} class={styles.FormInputIcon} />
-                </div>
-                <input type="password" name="password" id="login-form-password" ref={passwordRef} />
-            </div>
-
-            <Show when={invalidLogin()}>
-                <div class={styles.LoginError}>
-                    {usernameError()}
-                    <br/>
-                    {passwordError()}
-                </div>
-            </Show>
-
-            <button class={styles.LoginButton} onClick={loginFunction}>Log In</button>
-        </div>
+        <Form class={styles.LoginForm + (loading() == "main" ? " " + styles.Out : "")}>
+            <FormTitle>Account</FormTitle>
+            <FormTextInput icon={(<FaSolidUser size={16} />)} valueCallback={setUsername} placeholder="CoolGuy123" name="username" title="Username:" error={usernameError()} />
+            <FormTextInput icon={(<FaSolidKey size={16} />)} valueCallback={setPassword} placeholder="CoolPassword123" kind="password" name="password" title="Password:" error={passwordError()} />
+            <FormButtons>
+                <FormButton kind="secondary" loading={loading() == "register"} onClick={registerFunction}>Register</FormButton>
+                <FormButton kind="primary" loading={loading() == "login"} onClick={loginFunction}>Log In</FormButton>
+            </FormButtons>
+        </Form>
     );
 };
-
-export default LoginForm;

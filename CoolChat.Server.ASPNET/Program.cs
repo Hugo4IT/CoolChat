@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.DependencyInjection;
-using CoolChat.Data.EntityFramework;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using CoolChat.Domain.Interfaces;
+using CoolChat.Server.ASPNET.Services;
+using CoolChat.Server.ASPNET;
+using Microsoft.EntityFrameworkCore;
+using System.Net.WebSockets;
 
 internal class Program
 {
@@ -12,21 +15,6 @@ internal class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-
-        builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
-
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy(name: "allowApi", policy =>
-            {
-                policy.AllowAnyOrigin()
-                      .AllowAnyHeader()
-                      .AllowAnyMethod();
-            });
-        });
 
         builder.Services.AddAuthentication(options =>
         {
@@ -43,7 +31,22 @@ internal class Program
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = "http://localhost:3000/",
                     ValidAudience = "http://localhost:3000/",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["DefaultAuthenticationSigningKey"]!)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SecretSigningKey"]!)),
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        string? accessToken = context.Request.Query["access_token"];
+
+                        PathString path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/signalr/chathub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
                 };
             });
 
@@ -57,6 +60,34 @@ internal class Program
         })
         .AddEntityFrameworkStores<DataContext>();
 
+        builder.Services.AddDbContext<DataContext>(options =>
+            options.UseLazyLoadingProxies()
+                   .UseSqlite(builder.Configuration["ConnectionStrings:Default"]));
+        
+        builder.Services.AddScoped<ITokenService, TokenService>();
+        builder.Services.AddScoped<IAccountService, AccountService>();
+        builder.Services.AddScoped<IGroupService, GroupService>();
+        builder.Services.AddScoped<IResourceService, ResourceService>();
+        builder.Services.AddScoped<IChatService, ChatService>();
+
+        builder.Services.AddControllers();
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(name: "allowApi", policy =>
+            {
+                policy.WithOrigins("http://localhost:3000")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            });
+        });
+
+        builder.Services.AddSignalR();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -66,14 +97,15 @@ internal class Program
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
+        // app.UseHttpsRedirection();
+        app.UseCors("allowApi");
 
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.UseCors("allowApi");
-
         app.MapControllers();
+
+        app.MapHub<ChatHub>("/signalr/chathub");
 
         app.Run();
     }

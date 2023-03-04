@@ -1,75 +1,20 @@
+@keyframes appear {
+    0% { opacity: 0; transform: scale(0.9); filter: blur(5px); }
+    100% { opacity: 1; }
+}
+
+@keyframes out {
+    0% { opacity: 1; }
+    100% { opacity: 0; transform: scale(0.9); filter: blur(5px); }
+}
+
 .LoginForm {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    box-sizing: border-box;
+    min-height: 100%;
 
-    gap: 8px;
+    animation: appear 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
 
-    label {
-        align-self: flex-start;
-    }
-
-    .FormInput {
-        display: flex;
-        flex-direction: row;
-
-        border-radius: 8px;
-        border: solid 3px var(--input-field-icon-container-background-color);
-
-        background-color: var(--input-field-icon-container-background-color);
-
-        margin-bottom: 8px;
-
-        overflow: hidden;
-
-        .FormInputIconContainer {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            background-color: var(--input-field-icon-container-background-color);
-            color: var(--input-field-icon-container-color);
-
-            padding: 8px;
-
-            .FormInputIcon {
-                color: inherit;
-            }
-        }
-
-        input {
-            padding: 8px 16px 8px 8px;
-            border: none;
-            border-radius: 8px 0px 0px 8px !important;
-
-            color: var(--input-field-color);
-            background-color: var(--input-field-background-color);
-
-            font-size: 16px;
-
-            &:focus {
-                outline: none;
-            }
-        }
-    }
-
-    .LoginError {
-        color: var(--input-field-error-color);
-    }
-
-    .LoginButton {
-        display: block;
-        margin-top: 24px;
-        padding: 8px 16px;
-        color: var(--color);
-        background-color: var(--input-field-icon-container-background-color);
-        border-radius: 8px;
-        border: none;
-
-        font-size: 1rem;
-
-        &:focus {
-            outline: none;
-        }
+    &.Out {
+        animation: out 0.3s cubic-bezier(0.895, 0.03, 0.685, 0.22) forwards;
     }
 }

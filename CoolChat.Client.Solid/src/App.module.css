@@ -1,11 +1,40 @@
 .ThemeDark {
-    --color-rgb: 200, 200, 200;
+    /* --color-rgb: 200, 200, 200;
     --background-color-rgb: 41, 41, 41;
     --input-field-color-rgb: 141, 141, 141;
     --input-field-background-color-rgb: 31, 31, 31;
     --input-field-icon-container-color-rgb: 141, 141, 141;
     --input-field-icon-container-background-color-rgb: 61, 61, 61;
-    --input-field-error-color-rgb: 189, 53, 23;
+    --input-field-error-color-rgb: 255, 150, 150;
+    --input-field-error-background-color-rgb: 189, 29, 29; */
+
+    --color-rgb: var(--oc-gray-0-rgb);
+    --background-color-rgb: var(--oc-gray-9-rgb);
+    --input-field-color-rgb: var(--oc-gray-2-rgb);
+    --input-field-background-color-rgb: var(--oc-gray-8-rgb);
+    --input-field-icon-container-color-rgb: var(--oc-gray-2-rgb);
+    --input-field-icon-container-background-color-rgb: var(--oc-gray-7-rgb);
+    --input-field-placeholder-color-rgb: var(--oc-gray-5-rgb);
+    --input-field-error-color-rgb: var(--oc-red-2-rgb);
+    --input-field-error-background-color-rgb: var(--oc-red-7-rgb);
+    --sidebar-background-color-rgb: var(--oc-gray-8-rgb);
+    --channel-bar-background-color-rgb: var(--oc-gray-7-rgb);
+    --channel-button-background-color-rgb: var(--oc-gray-6-rgb);
+    --channel-button-background-color-hovered-rgb: var(--oc-gray-5-rgb);
+    --message-background-color-rgb: var(--oc-gray-8-rgb);
+    --message-author-color-rgb: var(--oc-gray-5-rgb);
+    --message-date-color-rgb: var(--oc-gray-6-rgb);
+    --button-background-color-rgb: var(--oc-gray-7-rgb);
+    --button-color-rgb: var(--oc-gray-2-rgb);
+    --button-background-color-hovered-rgb: var(--oc-gray-6-rgb);
+    --button-color-hovered-rgb: var(--oc-gray-0-rgb);
+    --button-background-color-pressed-rgb: var(--oc-gray-8-rgb);
+    --button-color-pressed-rgb: var(--oc-gray-3-rgb);
+    --tooltip-background-color-rgb: var(--oc-gray-7-rgb);
+    --accent-background-color-rgb: var(--oc-pink-7-rgb);
+    --accent-color-rgb: var(--oc-pink-0-rgb);
+    --accent-background-color-hovered-rgb: var(--oc-pink-6-rgb);
+    --accent-color-hovered-rgb: var(--oc-pink-0-rgb);
 }
 
 .App {
@@ -15,7 +44,27 @@
     --input-field-background-color: rgb(var(--input-field-background-color-rgb));
     --input-field-icon-container-color: rgb(var(--input-field-icon-container-color-rgb));
     --input-field-icon-container-background-color: rgb(var(--input-field-icon-container-background-color-rgb));
-    --input-field-error-color: rgb(var(--input-field-error-color-rgb))
+    --input-field-placeholder-color: rgb(var(--input-field-placeholder-color-rgb));
+    --input-field-error-color: rgb(var(--input-field-error-color-rgb));
+    --input-field-error-background-color: rgb(var(--input-field-error-background-color-rgb));
+    --sidebar-background-color: rgb(var(--sidebar-background-color-rgb));
+    --channel-bar-background-color: rgb(var(--channel-bar-background-color-rgb));
+    --channel-button-background-color: rgb(var(--channel-button-background-color-rgb));
+    --channel-button-background-color-hovered: rgb(var(--channel-button-background-color-hovered-rgb));
+    --message-background-color: rgb(var(--message-background-color-rgb));
+    --message-author-color: rgb(var(--message-author-color-rgb));
+    --message-date-color: rgb(var(--message-date-color-rgb));
+    --button-background-color: rgb(var(--button-background-color-rgb));
+    --button-color: rgb(var(--button-color-rgb));
+    --button-background-color-hovered: rgb(var(--button-background-color-hovered-rgb));
+    --button-color-hovered: rgb(var(--button-color-hovered-rgb));
+    --button-background-color-pressed: rgb(var(--button-background-color-pressed-rgb));
+    --button-color-pressed: rgb(var(--button-color-pressed-rgb));
+    --tooltip-background-color: rgb(var(--tooltip-background-color-rgb));
+    --accent-background-color: rgb(var(--accent-background-color-rgb));
+    --accent-color: rgb(var(--accent-color-rgb));
+    --accent-background-color-hovered: rgb(var(--accent-background-color-hovered-rgb));
+    --accent-color-hovered: rgb(var(--accent-color-hovered-rgb));
 
     box-sizing: border-box;
 
@@ -26,8 +75,8 @@
     flex-direction: column;
     align-items: center;
 
-    padding: 32px;
-
     background: var(--background-color);
     color: var(--color);
+
+    overflow: hidden;
 }

@@ -1,0 +1,58 @@
+.Chat {
+    display: grid;
+    grid-template-rows: 1fr min-content;
+    gap: 16px;
+
+    height: 100%;
+    max-height: inherit;
+
+    .ChatMessages {
+        /* height: inherit; */
+        /* max-height: inherit; */
+        overflow-y: scroll;
+        
+        .ScrolledRect {
+            /* min-height: min-content; */
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-start;
+        }
+    }
+
+    .ChatInput {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 24px;
+
+        background-color: var(--oc-gray-7);
+        color: inherit;
+
+        padding: 8px;
+        padding-right: 24px;
+        border-radius: 16px;
+
+        textarea {
+            flex-grow: 1;
+
+            /* Padding (normal padding doesn't work for textarea in this context) */
+            border: solid 16px transparent;
+
+            background-color: var(--oc-gray-8);
+            border-radius: 8px;
+
+            color: inherit;
+            font-size: inherit;
+
+            resize: none;
+
+            font-family: inherit;
+
+            &:focus {
+                outline: none;
+            }
+        }
+    }
+}

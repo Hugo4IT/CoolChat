@@ -1,0 +1,133 @@
+@keyframes appear {
+    0% { opacity: 0; transform: translateY(100px); filter: blur(5px); }
+    100% { opacity: 1; }
+}
+
+@keyframes out {
+    0% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-100px); filter: blur(5px); }
+}
+
+@keyframes appear-flip {
+    0% { opacity: 0; transform: translateY(-100px); filter: blur(5px); }
+    100% { opacity: 1; }
+}
+
+@keyframes out-flip {
+    0% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(100px); filter: blur(5px); }
+}
+
+@keyframes appear-first {
+    0% { opacity: 0; transform: scale(1.1); filter: blur(5px); }
+    100% { opacity: 1; }
+}
+
+@keyframes out-first {
+    0% { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.1); filter: blur(5px); }
+}
+
+.Group {
+    height: 100%;
+
+    display: grid;
+    grid-template-columns: 250px 1fr;
+
+    .Sidebar {
+        background-color: var(--channel-bar-background-color);
+        
+        .SidebarContents {
+            height: 100%;
+
+            overflow-y: auto;
+
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 16px;
+
+            .ChannelButton {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+
+                padding: 8px 16px;
+
+                border: none;
+                border-radius: 8px;
+
+                font-size: inherit;
+                font-family: inherit;
+                font-weight: 700;
+                
+                color: inherit;
+                background-color: var(--channel-button-background-color);
+
+                transition: background-color 0.15s cubic-bezier(0.165, 0.84, 0.44, 1),
+                            color 0.15s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+                &.Dim {
+                    background-color: transparent;
+                }
+
+                &.Active {
+                    background-color: var(--accent-background-color);
+                    color: var(--accent-color);
+                }
+
+                &:hover {
+                    background-color: var(--channel-button-background-color-hovered);
+
+                    &.Dim {
+                        background-color: var(--channel-button-background-color);
+                    }
+                    &.Active {
+                        background-color: var(--accent-background-color-hovered);
+                        color: var(--accent-color-hovered);
+                    }
+                }
+
+                &:focus {
+                    outline: none;
+                }
+            }
+        }
+    }
+
+    .ChatContainer {
+        padding: 32px;
+        overflow: hidden;
+
+        max-height: inherit;
+    }
+}
+
+.Animated {
+    &:not(.Flip):not(.First) {
+        animation: appear 0.15s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    }
+    
+    &.Flip {
+        animation: appear-flip 0.15s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    }
+
+    &.First {
+        animation: appear-first 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    }
+
+    &.Out {
+        &:not(.First):not(.Flip) {
+            animation: out 0.15s cubic-bezier(0.895, 0.03, 0.685, 0.22) forwards;
+        }
+        
+        &.Flip {
+            animation: out-flip 0.15s cubic-bezier(0.895, 0.03, 0.685, 0.22) forwards;
+        }
+
+        &.First {
+            animation: out-first 0.3s cubic-bezier(0.895, 0.03, 0.685, 0.22) forwards;
+        }
+    }
+}
