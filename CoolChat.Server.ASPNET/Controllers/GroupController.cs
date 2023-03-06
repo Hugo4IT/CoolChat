@@ -20,19 +20,16 @@ class MyGroupsResponse
         public int Id { get; set; }
         public string Title { get; set; } = null!;
         public Resource Icon { get; set; } = null!;
-    }
 
-    public List<Item> Items { get; set; } = null!;
-}
+        public class ChannelItem
+        {
+            public int Id { get; set; }
+            public int ChatId { get; set; }
+            public string Name { get; set; } = null!;
+            public int Icon { get; set; }
+        }
 
-class GetChannelsResponse
-{
-    public class Item
-    {
-        public int Id { get; set; }
-        public int ChatId { get; set; }
-        public string Name { get; set; } = null!;
-        public int Icon { get; set; }
+        public List<ChannelItem> Channels { get; set; } = null!;
     }
 
     public List<Item> Items { get; set; } = null!;
@@ -87,11 +84,7 @@ public class GroupController : ControllerBase
 
         Resource icon = await _resourceService.Upload(file.FileName, stream.ToArray());
 
-        // Get current user
-        ClaimsPrincipal principal = _tokenService.GetPrincipalFromExpiredToken(Request.Headers.Authorization![0]!.Substring("Bearer ".Length));
-        string name = principal.Identity!.Name!;
-
-        Account account = _accountService.GetByUsername(name)!;
+        Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
 
         // Create group and add user
         Group group = _groupService.CreateGroup(title, icon);
@@ -108,10 +101,7 @@ public class GroupController : ControllerBase
     [HttpGet("MyGroups"), Authorize]
     public IActionResult MyGroups()
     {
-        ClaimsPrincipal principal = _tokenService.GetPrincipalFromExpiredToken(Request.Headers.Authorization![0]!.Substring("Bearer ".Length));
-        string name = principal.Identity!.Name!;
-
-        Account account = _accountService.GetByUsername(name)!;
+        Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
         
         return Ok(new MyGroupsResponse
         {
@@ -120,26 +110,13 @@ public class GroupController : ControllerBase
                 Id = group.Id,
                 Title = group.Name,
                 Icon = group.Icon,
-            }).ToList(),
-        });
-    }
-
-    [HttpGet("GetChannels"), Authorize]
-    public IActionResult GetChannels([FromQuery] int id)
-    {
-        Group? group = _groupService.GetById(id);
-
-        if (group == null)
-            return BadRequest("Invalid group id");
-        
-        return Ok(new GetChannelsResponse
-        {
-            Items = group.Channels.Select(channel => new GetChannelsResponse.Item
-            {
-                Id = channel.Id,
-                ChatId = channel.Chat.Id,
-                Name = channel.Name,
-                Icon = channel.Icon,
+                Channels = group.Channels.Select(channel => new MyGroupsResponse.Item.ChannelItem
+                {
+                    Id = channel.Id,
+                    ChatId = channel.Chat.Id,
+                    Icon = channel.Icon,
+                    Name = channel.Name,
+                }).ToList(),
             }).ToList(),
         });
     }

@@ -1,53 +1,58 @@
-import { HubConnectionBuilder } from "@microsoft/signalr";
 import { FaSolidPaperPlane } from "solid-icons/fa";
-import { Component, createResource, For, onCleanup, onMount } from "solid-js";
-import { API_ROOT } from "../Globals";
-import { GetMessagesResponse } from "../interfaces/GetMessagesResponse";
-import { getToken } from "../JwtHelper";
+import { Component, createResource, For, onMount } from "solid-js";
+import { ChatConnectionsManager } from "../ChatConnectionsManager";
+import { MessageModel } from "../interfaces/MessageModel";
 import { Message } from "../Message/Message";
 
 import styles from "./Chat.module.css";
 
-const fetchMessages = async (args: {id: number, start: number, count: number}) =>
-    await (await fetch(`${API_ROOT}/api/Chat/GetMessages?id=${args.id}&start=${args.start}&count=${args.count}`, {
-        headers: { "Authorization": "Bearer " + await getToken() }
-    })).json() as GetMessagesResponse;
-
 interface ChatProps {
     id: number;
+    cc: ChatConnectionsManager;
+    onSendMessage?: (id: number, message: string) => void;
 }
 
 export const Chat: Component<ChatProps> = (props: ChatProps) => {
     const username = localStorage.getItem("username")!;
-    const [messages, { mutate }] = createResource(() => ({id: props.id, start: 0, count: 50}), fetchMessages);
-    
-    const pushMessage = (message: { author: string, content: string, date: Date }) => {
-        mutate(oldMessages => {
-            const copy = oldMessages!.items;
-
-            // Update second-last message for message grouping
-            if (copy.length > 0)
-                copy[copy.length - 1] = {
-                    author: copy[copy.length - 1].author,
-                    content: copy[copy.length - 1].content,
-                    date: copy[copy.length - 1].date,
-                };
-
-            copy.push({ author: message.author, content: message.content, date: message.date });
-            return { items: copy };
-        });
-    };
-
-
-    const connection = new HubConnectionBuilder()
-        .withUrl("http://localhost:5010/signalr/chathub", { accessTokenFactory: () => localStorage.getItem("jwt")! })
-        .build();
-    connection.on("ReceiveMessage", (id: number, author: string, content: string, date: Date) => {
-        pushMessage({ author: author, content: content, date: date });
-    });
-    connection.start();
+    const [messages, { mutate }] = createResource(() => props.id, props.cc.getMessages);
 
     let chatInputRef: HTMLTextAreaElement|undefined;
+    let scrolledRectRef: HTMLDivElement|undefined;
+
+    const pushMessage = (id: number, message: MessageModel) => {
+        if (id != props.id)
+            return;
+        
+        mutate(messages => {
+            const toUpdate = [];
+
+            // Update last for message grouping
+            if (messages!.length > 0) {
+                const lastMessage = messages!.pop()!;
+
+                toUpdate.push({
+                    author: lastMessage.author,
+                    content: lastMessage.content,
+                    date: lastMessage.date
+                });
+            }
+
+            toUpdate.push({ author: message.author, content: message.content, date: message.date });
+
+            return [...messages!, ...toUpdate];
+        });
+
+        if (scrolledRectRef!.scrollTop >= scrolledRectRef!.getBoundingClientRect().height - 10)
+            scrolledRectRef!.scrollTop = scrolledRectRef!.scrollHeight;
+    };
+
+    onMount(() => {
+        props.cc.onMessageReceived.push(pushMessage);
+
+        setTimeout(() => {
+            scrolledRectRef!.scrollTop = 9999;
+        }, 300);
+    });
 
     const chatInput = () => {
         const value = chatInputRef!.value;
@@ -68,28 +73,17 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
             chatInputRef!.value = "";
             chatInputRef!.rows = 1;
 
-            connection.send("SendMessage", props.id, value);
-            
-            // await fetch(`${API_ROOT}/api/Chat/AddMessage?id=${props.id}`, {
-            //     headers: { "Authorization": "Bearer " + await getToken() },
-            //     method: "post",
-            //     body: value,
-            // })
-            //     .then(res => res.json())
-            //     .then(res => {
-            //         // pushMessage(res);
-            //     })
-            //     .catch(res => console.error(res));
+            await props.cc.sendMessage(props.id, value);
         }
     };
 
     return (
         <div class={styles.Chat}>
-            <div class={styles.ChatMessages}>
+            <div class={styles.ChatMessages} ref={scrolledRectRef}>
                 <div class={styles.ScrolledRect}>
-                    <For each={messages()?.items ?? []}>{(message, i) => {
-                        const hideAuthor = i() > 0 && messages()!.items[i() - 1].author == message.author;
-                        const hideDate = i() < messages()!.items.length - 1 && messages()!.items[i() + 1].author == message.author;
+                    <For each={messages() ?? []}>{(message, i) => {
+                        const hideAuthor = i() > 0 && messages()![i() - 1].author == message.author;
+                        const hideDate = i() < messages()!.length - 1 && messages()![i() + 1].author == message.author;
 
                         return (
                             <Message author={hideAuthor ? undefined : message.author}

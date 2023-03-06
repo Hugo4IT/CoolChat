@@ -1,6 +1,5 @@
-import { Component, createEffect, createResource, createSignal, For, Match, Show, Switch } from "solid-js";
-import { createStore } from "solid-js/store";
-import { Chat } from "../Chat/Chat";
+import { Component, createEffect, createResource, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { createStore, produce } from "solid-js/store";
 
 import styles from "./Main.module.css";
 import globalStyles from "../GlobalStyles.module.css";
@@ -9,9 +8,12 @@ import { getToken, logout } from "../JwtHelper";
 import { CreateGroupForm } from "../CreateGroupForm/CreateGroupForm";
 import { GroupCreateResponse } from "../interfaces/GroupCreateResponse";
 import { MyGroupsResponse } from "../interfaces/MyGroupsResponse";
-import { Resource } from "../interfaces/Resource";
 import { API_ROOT } from "../Globals";
 import { GroupView } from "../GroupView/GroupView";
+import { MyChatsResponse } from "../interfaces/MyChatsReponse";
+import { MessageModel } from "../interfaces/MessageModel";
+import { ChatConnectionsManager } from "../ChatConnectionsManager";
+import { GetMessagesResponse } from "../interfaces/GetMessagesResponse";
 
 interface MainProps {
     logoutCallback: () => void;
@@ -22,14 +24,23 @@ const fetchGroups = async () =>
         headers: { "Authorization": "Bearer " + await getToken() }
     })).json()) as MyGroupsResponse;
 
+const fetchChats = async () =>
+    (await (await fetch(`${API_ROOT}/api/Chat/MyChats`, {
+        headers: { "Authorization": "Bearer " + await getToken() }
+    })).json()) as MyChatsResponse;
+
+
 export const Main: Component<MainProps> = (props: MainProps) => {
     const [loading, setLoading] = createSignal("nothing");
     const [selectedGroup, setSelectedGroup] = createSignal<number|undefined>(undefined);
     const [lastSelectedGroup, setLastSelectedGroup] = createSignal<number|undefined>(undefined);
     const [view, setView] = createSignal("main");
+
     const [groups, { mutate, refetch }] = createResource(fetchGroups);
+    const [chats] = createResource(fetchChats);
 
     createEffect(() => {
+        // Animations
         if (loading() == "main") {
             setTimeout(() => {
                 setView("main");
@@ -73,10 +84,21 @@ export const Main: Component<MainProps> = (props: MainProps) => {
         setLoading("createGroup");
     };
 
-    const createGroupExit = (success: boolean, res: GroupCreateResponse|null) => {
-        refetch();
+    const createGroupExit = async (success: boolean, res: GroupCreateResponse|null) => {
+        await refetch();
         setLoading("main");
     };
+
+    const cc = new ChatConnectionsManager();
+
+    cc.onMessageReceived.push(async (id: number, message: MessageModel) => {
+        
+    });
+
+    onMount(cc.start);
+    onCleanup(cc.stop);
+
+    const groupAnimationShowOld = () => loading() == "group" && lastSelectedGroup() != undefined;
     
     return (
         <Switch>
@@ -128,14 +150,11 @@ export const Main: Component<MainProps> = (props: MainProps) => {
 
                             </Match>
                             <Match when={selectedGroup() != undefined}>
-                                <Switch>
-                                    <Match when={loading() == "group" && lastSelectedGroup() != undefined}>
-                                        <GroupView id={groups()!.items[lastSelectedGroup()!]!.id} index={selectedGroup()!} lastIndex={lastSelectedGroup()} out={true} />
-                                    </Match>
-                                    <Match when={loading() != "group"}>
-                                        <GroupView id={groups()!.items[selectedGroup()!]!.id} index={selectedGroup()!} lastIndex={lastSelectedGroup()} out={false} />
-                                    </Match>
-                                </Switch>
+                                <GroupView group={groups()!.items[groupAnimationShowOld() ? lastSelectedGroup()! : selectedGroup()!]!}
+                                           lastIndex={lastSelectedGroup()}
+                                           index={selectedGroup()!}
+                                           out={groupAnimationShowOld()}
+                                           cc={cc}/>
                             </Match>
                         </Switch>
                     </div>

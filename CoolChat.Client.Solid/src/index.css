@@ -1,5 +1,9 @@
 @import "./OpenColor.css";
 
+* {
+    scroll-behavior: smooth;
+}
+
 html, body {
     min-height: 100vh;
     height: 100vh;

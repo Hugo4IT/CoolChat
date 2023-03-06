@@ -21,6 +21,11 @@ class GetMessagesResponse
     public List<Item> Items { get; set; } = null!;
 }
 
+class MyChatsResponse
+{
+    public List<int> Ids { get; set; } = null!;
+}
+
 [ApiController]
 [Route("api/[controller]")]
 public class ChatController : ControllerBase
@@ -56,6 +61,17 @@ public class ChatController : ControllerBase
                 Content = message.Content,
                 Date = message.Date,
             }).ToList(),
+        });
+    }
+
+    [HttpGet("MyChats"), Authorize]
+    public IActionResult MyChats()
+    {
+        Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
+        
+        return Ok(new MyChatsResponse
+        {
+            Ids = account.Chats.Select(chat => chat.Id).ToList(),
         });
     }
 

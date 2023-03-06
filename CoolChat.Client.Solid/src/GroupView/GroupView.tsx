@@ -3,23 +3,20 @@ import { Chat } from "../Chat/Chat";
 import { API_ROOT } from "../Globals";
 
 import styles from "./GroupView.module.css";
-import { GetChannelsResponse } from "../interfaces/GetChannelsResponse";
 import { getToken } from "../JwtHelper";
 import { FaSolidHashtag, FaSolidPlus } from "solid-icons/fa";
+import { ChatConnectionsManager } from "../ChatConnectionsManager";
+import { GroupModel } from "../interfaces/GroupModel";
 
 interface GroupViewProps {
-    id: number;
+    group: GroupModel;
     index: number;
     lastIndex: number|undefined;
     out: boolean;
+    cc: ChatConnectionsManager;
 }
 
-const fetchChannels = async (id: number) => (await (await fetch(`${API_ROOT}/api/Group/GetChannels?id=${id}`, {
-    headers: { "Authorization": "Bearer " + await getToken() }})).json()) as GetChannelsResponse;
-
 export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
-    const [channels] = createResource(props.id, fetchChannels);
-
     const [selectedChannel, setSelectedChannel] = createSignal(0);
 
     return (
@@ -31,7 +28,7 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
                         [styles.First]: props.lastIndex == undefined,
                         [styles.Flip]: props.lastIndex != undefined && props.lastIndex > props.index,
                      }}>
-                    <For each={channels()?.items ?? []}>{(channel, i) => (
+                    <For each={props.group.channels}>{(channel, i) => (
                         <button class={styles.ChannelButton}
                                 classList={{
                                     [styles.Active]: selectedChannel() == i(),
@@ -56,9 +53,8 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
                     [styles.First]: props.lastIndex == undefined,
                     [styles.Flip]: props.lastIndex != undefined && props.lastIndex > props.index,
                  }}>
-                <Show when={channels() != undefined}>
-                    <Chat id={channels()!.items[selectedChannel()]!.chatId}/>
-                </Show>
+                <Chat id={props.group.channels[selectedChannel()]!.chatId}
+                      cc={props.cc} />
             </div>
         </div>
     );

@@ -17,8 +17,8 @@ public class ChatService : IChatService
 
     public IEnumerable<Message> GetMessages(Chat chat, int start, int count) =>
         chat.Messages
-            .Skip(start)
-            .Take(count);
+            .SkipLast(start)
+            .TakeLast(count);
         
     public void AddMessage(Chat chat, Message message)
     {

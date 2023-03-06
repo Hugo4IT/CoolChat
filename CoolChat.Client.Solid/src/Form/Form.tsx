@@ -9,7 +9,7 @@ interface FormProps {
 
 export const Form: Component<FormProps> = (props: FormProps) => {
     return (
-        <div class={typeof props.class !== 'undefined' ? `${props.class} ${styles.Form}` : styles.Form}>
+        <div class={[props.class ?? "", styles.Form].join(' ')}>
             {...props.children}
         </div>
     );

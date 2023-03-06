@@ -51,6 +51,16 @@ public class ChatHub : Hub
         await Clients.Group(chat.Id.ToString()).SendAsync("ReceiveMessage", chatId, message.Author.Name, message.Content, message.Date);
     }
 
+    public async Task TryJoin(int chatId)
+    {
+        Account account = _accountService.GetByUsername(Context.User!.Identity!.Name!)!;
+
+        if (!account.Chats.Any(c => c.Id == chatId))
+            return;
+
+        await Join(chatId);
+    }
+
     public override async Task OnConnectedAsync()
     {
         string name = Context.User!.Identity!.Name!;
