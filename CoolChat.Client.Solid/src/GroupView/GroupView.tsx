@@ -19,6 +19,8 @@ interface GroupViewProps {
 export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
     const [selectedChannel, setSelectedChannel] = createSignal(0);
 
+    const getSelectedChannelChat = () => props.group.channels[selectedChannel()]!.chatId;
+
     return (
         <div class={styles.Group}>
             <div class={styles.Sidebar}>
@@ -53,7 +55,7 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
                     [styles.First]: props.lastIndex == undefined,
                     [styles.Flip]: props.lastIndex != undefined && props.lastIndex > props.index,
                  }}>
-                <Chat id={props.group.channels[selectedChannel()]!.chatId}
+                <Chat id={getSelectedChannelChat}
                       cc={props.cc} />
             </div>
         </div>

@@ -1,5 +1,5 @@
-import { FaSolidPaperPlane } from "solid-icons/fa";
-import { Component, createResource, For, onMount } from "solid-js";
+import { FaSolidCirclePlus } from "solid-icons/fa";
+import { Accessor, Component, createEffect, createResource, For, onMount } from "solid-js";
 import { ChatConnectionsManager } from "../ChatConnectionsManager";
 import { MessageModel } from "../interfaces/MessageModel";
 import { Message } from "../Message/Message";
@@ -7,51 +7,47 @@ import { Message } from "../Message/Message";
 import styles from "./Chat.module.css";
 
 interface ChatProps {
-    id: number;
+    id: Accessor<number>;
     cc: ChatConnectionsManager;
     onSendMessage?: (id: number, message: string) => void;
 }
 
 export const Chat: Component<ChatProps> = (props: ChatProps) => {
     const username = localStorage.getItem("username")!;
-    const [messages, { mutate }] = createResource(() => props.id, props.cc.getMessages);
+    const [messages, { refetch, mutate }] = createResource(props.id, props.cc.getMessages);
 
     let chatInputRef: HTMLTextAreaElement|undefined;
     let scrolledRectRef: HTMLDivElement|undefined;
 
+    // Scroll to bottom of chat on open
+    createEffect(() => {
+        props.id();
+        scrolledRectRef!.style.scrollBehavior = "initial";
+        setTimeout(() => {
+            scrolledRectRef!.scrollTop = 999999;
+            scrolledRectRef!.style.scrollBehavior = "smooth";
+        }, 150);
+    });
+    
     const pushMessage = (id: number, message: MessageModel) => {
-        if (id != props.id)
+        if (id != props.id())
             return;
         
-        mutate(messages => {
-            const toUpdate = [];
+        refetch();
+        mutate(m => new Array(m![0]));
 
-            // Update last for message grouping
-            if (messages!.length > 0) {
-                const lastMessage = messages!.pop()!;
-
-                toUpdate.push({
-                    author: lastMessage.author,
-                    content: lastMessage.content,
-                    date: lastMessage.date
-                });
-            }
-
-            toUpdate.push({ author: message.author, content: message.content, date: message.date });
-
-            return [...messages!, ...toUpdate];
-        });
-
-        if (scrolledRectRef!.scrollTop >= scrolledRectRef!.getBoundingClientRect().height - 10)
-            scrolledRectRef!.scrollTop = scrolledRectRef!.scrollHeight;
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+            if (scrolledRectRef!.scrollTop >= scrolledRectRef!.getBoundingClientRect().height - 10)
+                scrolledRectRef!.scrollTop = 999999999;
+        }));
     };
 
     onMount(() => {
         props.cc.onMessageReceived.push(pushMessage);
 
-        setTimeout(() => {
-            scrolledRectRef!.scrollTop = 9999;
-        }, 300);
+        window.requestAnimationFrame(() => {
+            scrolledRectRef!.scrollTop = 999999;
+        });
     });
 
     const chatInput = () => {
@@ -73,7 +69,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
             chatInputRef!.value = "";
             chatInputRef!.rows = 1;
 
-            await props.cc.sendMessage(props.id, value);
+            props.cc.sendMessage(props.id(), value);
         }
     };
 
@@ -96,7 +92,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
             </div>
             <div class={styles.ChatInput}>
                 <textarea ref={chatInputRef} placeholder="Say something funny" onInput={chatInput} rows={1} onkeydown={chatKeyDown}></textarea>
-                <FaSolidPaperPlane size={16} />
+                <FaSolidCirclePlus size={20} class={styles.ChatInputIcon} />
             </div>
         </div>
     );

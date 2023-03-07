@@ -36,8 +36,8 @@ export const Main: Component<MainProps> = (props: MainProps) => {
     const [lastSelectedGroup, setLastSelectedGroup] = createSignal<number|undefined>(undefined);
     const [view, setView] = createSignal("main");
 
-    const [groups, { mutate, refetch }] = createResource(fetchGroups);
-    const [chats] = createResource(fetchChats);
+    const [groups, { refetch }] = createResource(fetchGroups);
+    // const [chats] = createResource(fetchChats);
 
     createEffect(() => {
         // Animations

@@ -78,6 +78,7 @@
                 }
 
                 &:hover {
+                    cursor: pointer;
                     background-color: var(--channel-button-background-color-hovered);
 
                     &.Dim {

@@ -31,10 +31,10 @@
     --button-background-color-pressed-rgb: var(--oc-gray-8-rgb);
     --button-color-pressed-rgb: var(--oc-gray-3-rgb);
     --tooltip-background-color-rgb: var(--oc-gray-7-rgb);
-    --accent-background-color-rgb: var(--oc-pink-7-rgb);
-    --accent-color-rgb: var(--oc-pink-0-rgb);
-    --accent-background-color-hovered-rgb: var(--oc-pink-6-rgb);
-    --accent-color-hovered-rgb: var(--oc-pink-0-rgb);
+    --accent-background-color-rgb: var(--oc-blue-7-rgb);
+    --accent-color-rgb: var(--oc-blue-0-rgb);
+    --accent-background-color-hovered-rgb: var(--oc-blue-6-rgb);
+    --accent-color-hovered-rgb: var(--oc-blue-0-rgb);
 }
 
 .App {

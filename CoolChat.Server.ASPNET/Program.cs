@@ -7,6 +7,7 @@ using CoolChat.Server.ASPNET.Services;
 using CoolChat.Server.ASPNET;
 using Microsoft.EntityFrameworkCore;
 using System.Net.WebSockets;
+using System.Diagnostics;
 
 internal class Program
 {
@@ -14,7 +15,8 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
+        builder.Logging.ClearProviders()
+                       .AddColorConsoleLogger();
 
         builder.Services.AddAuthentication(options =>
         {
@@ -63,7 +65,7 @@ internal class Program
         builder.Services.AddDbContext<DataContext>(options =>
             options.UseLazyLoadingProxies()
                    .UseSqlite(builder.Configuration["ConnectionStrings:Default"]));
-        
+
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAccountService, AccountService>();
         builder.Services.AddScoped<IGroupService, GroupService>();
