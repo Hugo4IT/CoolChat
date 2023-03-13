@@ -18,6 +18,8 @@
     --input-field-error-color-rgb: var(--oc-red-2-rgb);
     --input-field-error-background-color-rgb: var(--oc-red-7-rgb);
     --sidebar-background-color-rgb: var(--oc-gray-8-rgb);
+    --members-bar-background-color-rgb: var(--oc-gray-8-rgb);
+    --members-toolbar-background-color-rgb: var(--oc-gray-7-rgb);
     --channel-bar-background-color-rgb: var(--oc-gray-7-rgb);
     --channel-button-background-color-rgb: var(--oc-gray-6-rgb);
     --channel-button-background-color-hovered-rgb: var(--oc-gray-5-rgb);
@@ -35,6 +37,8 @@
     --accent-color-rgb: var(--oc-blue-0-rgb);
     --accent-background-color-hovered-rgb: var(--oc-blue-6-rgb);
     --accent-color-hovered-rgb: var(--oc-blue-0-rgb);
+    --link-color-rgb: var(--oc-blue-4-rgb);
+    --link-color-visited-rgb: var(--oc-blue-4-rgb);
 }
 
 .App {
@@ -48,6 +52,8 @@
     --input-field-error-color: rgb(var(--input-field-error-color-rgb));
     --input-field-error-background-color: rgb(var(--input-field-error-background-color-rgb));
     --sidebar-background-color: rgb(var(--sidebar-background-color-rgb));
+    --members-bar-background-color: rgb(var(--members-bar-background-color-rgb));
+    --members-toolbar-background-color: rgb(var(--members-toolbar-background-color-rgb));
     --channel-bar-background-color: rgb(var(--channel-bar-background-color-rgb));
     --channel-button-background-color: rgb(var(--channel-button-background-color-rgb));
     --channel-button-background-color-hovered: rgb(var(--channel-button-background-color-hovered-rgb));
@@ -65,6 +71,8 @@
     --accent-color: rgb(var(--accent-color-rgb));
     --accent-background-color-hovered: rgb(var(--accent-background-color-hovered-rgb));
     --accent-color-hovered: rgb(var(--accent-color-hovered-rgb));
+    --link-color: rgb(var(--link-color-rgb));
+    --link-color-visited: rgb(var(--link-color-visited-rgb));
 
     box-sizing: border-box;
 

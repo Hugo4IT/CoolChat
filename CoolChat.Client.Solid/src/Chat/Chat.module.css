@@ -25,13 +25,12 @@
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        gap: 24px;
+        gap: 8px;
 
         background-color: var(--oc-gray-7);
         color: inherit;
 
         padding: 8px;
-        padding-right: 24px;
         border-radius: 16px;
 
         textarea {
@@ -57,6 +56,16 @@
 
         .ChatInputIcon {
             color: var(--color);
+            padding: 16px;
         }
     }
+}
+
+.EmojiPicker {
+    position: absolute;
+    top: calc(var(--e-pos-y) - 20px);
+    left: calc(var(--e-pos-x) + 20px);
+    transform: translate(-100%, -100%);
+
+    width: 300px;
 }

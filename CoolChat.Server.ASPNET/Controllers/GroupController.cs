@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using CoolChat.Domain.Interfaces;
 using CoolChat.Domain.Models;
@@ -6,33 +7,62 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CoolChat.Server.ASPNET.Controllers;
 
-class GroupCreateResponse
+public class InviteDto
+{
+    [Required]
+    public int InviteId { get; set; }
+
+    [Required]
+    public int GroupId { get; set; }
+
+    [Required]
+    public string GroupName { get; set; }
+
+    [Required]
+    public int MemberCount { get; set; }
+
+    [Required]
+    public Resource GroupIcon { get; set; }
+
+    [Required]
+    public string SenderName { get; set; }
+
+    [Required]
+    public int SenderId { get; set; }
+}
+
+public class ChannelDto
+{
+    public int Id { get; set; }
+    public int ChatId { get; set; }
+    public string Name { get; set; } = null!;
+    public int Icon { get; set; }
+
+    public static ChannelDto FromModel(Channel channel) => new ChannelDto
+    {
+        Id = channel.Id,
+        ChatId = channel.Chat.Id,
+        Icon = channel.Icon,
+        Name = channel.Name,
+    };
+}
+
+public class GroupDto
 {
     public int Id { get; set; }
     public string Title { get; set; } = null!;
     public Resource Icon { get; set; } = null!;
-}
 
-class MyGroupsResponse
-{
-    public class Item
+
+    public List<ChannelDto> Channels { get; set; } = null!;
+
+    public static GroupDto FromModel(Group group) => new GroupDto
     {
-        public int Id { get; set; }
-        public string Title { get; set; } = null!;
-        public Resource Icon { get; set; } = null!;
-
-        public class ChannelItem
-        {
-            public int Id { get; set; }
-            public int ChatId { get; set; }
-            public string Name { get; set; } = null!;
-            public int Icon { get; set; }
-        }
-
-        public List<ChannelItem> Channels { get; set; } = null!;
-    }
-
-    public List<Item> Items { get; set; } = null!;
+        Id = group.Id,
+        Title = group.Name,
+        Icon = group.Icon,
+        Channels = group.Channels.Select(ChannelDto.FromModel).ToList(),
+    };
 }
 
 [ApiController]
@@ -87,15 +117,9 @@ public class GroupController : ControllerBase
         Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
 
         // Create group and add user
-        Group group = _groupService.CreateGroup(title, icon);
-        _groupService.AddMember(group, account);
+        Group group = _groupService.CreateGroup(account, title, icon);
 
-        return Ok(new GroupCreateResponse
-        {
-            Id = group.Id,
-            Title = group.Name,
-            Icon = group.Icon,
-        });
+        return Ok(GroupDto.FromModel(group));
     }
 
     [HttpGet("MyGroups"), Authorize]
@@ -103,21 +127,32 @@ public class GroupController : ControllerBase
     {
         Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
         
-        return Ok(new MyGroupsResponse
+        return Ok(account.Groups.Select(GroupDto.FromModel));
+    }
+
+    [HttpGet("MyInvites"), Authorize]
+    public IActionResult MyInvites()
+    {
+        Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
+        return Ok(account.ReceivedInvites.Where(invite => invite.Type == InviteType.Group)
+                                         .Select(invite =>
         {
-            Items = account.Groups.Select(group => new MyGroupsResponse.Item
+            Group? group = _groupService.GetById(invite.InvitedId);
+            Account sender = invite.From;
+            
+            if (group == null)
+                return null;
+            
+            return new InviteDto
             {
-                Id = group.Id,
-                Title = group.Name,
-                Icon = group.Icon,
-                Channels = group.Channels.Select(channel => new MyGroupsResponse.Item.ChannelItem
-                {
-                    Id = channel.Id,
-                    ChatId = channel.Chat.Id,
-                    Icon = channel.Icon,
-                    Name = channel.Name,
-                }).ToList(),
-            }).ToList(),
-        });
+                InviteId = invite.Id,
+                GroupId = group.Id,
+                GroupName = group.Name,
+                GroupIcon = group.Icon,
+                MemberCount = group.Members.Count,
+                SenderId = sender.Id,
+                SenderName = sender.Name
+            };
+        }).Where(i => i != null));
     }
 }

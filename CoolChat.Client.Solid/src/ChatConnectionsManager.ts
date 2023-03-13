@@ -1,7 +1,10 @@
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { API_ROOT } from "./Globals";
 import { GetMessagesResponse } from "./interfaces/GetMessagesResponse";
+import { GroupDto } from "./interfaces/GroupDto";
+import { InviteDto } from "./interfaces/InviteDto";
 import { MessageModel } from "./interfaces/MessageModel";
+import { Resource } from "./interfaces/Resource";
 import { getToken } from "./JwtHelper";
 
 const fetchMessages = async (id: number, start: number, count: number) =>
@@ -14,6 +17,8 @@ export class ChatConnectionsManager {
     private chatCache: Map<number, MessageModel[]>;
 
     public onMessageReceived: ((id: number, message: MessageModel) => void|PromiseLike<void>)[] = [];
+    public onGroupInviteReceived: ((invite: InviteDto) => void|PromiseLike<void>)[] = [];
+    public onGroupJoined: ((group: GroupDto) => void|PromiseLike<void>)[] = [];
 
     public constructor() {
         this.connection = new HubConnectionBuilder()
@@ -23,6 +28,18 @@ export class ChatConnectionsManager {
         this.connection.on("ReceiveMessage", (id: number, author: string, content: string, date: Date) => {
             this.messageReceived(id, { author: author, content: content, date: date });
         });
+
+        this.connection.on("ReceiveGroupInvite", (invite: InviteDto) => {
+            for (const callback of this.onGroupInviteReceived) {
+                callback(invite);
+            }
+        });
+
+        this.connection.on("GroupJoined", (group: GroupDto) => {
+            for (const callback of this.onGroupJoined) {
+                callback(group);
+            }
+        })
 
         this.chatCache = new Map();
     }
@@ -41,6 +58,18 @@ export class ChatConnectionsManager {
     public sendMessage = (id: number, message: string) => {
         this.connection.send("SendMessage", id, message);
     }
+
+    public sendInvite = async (groupId: number, username: string) => {
+        return (await this.connection.invoke("CreateInvite", groupId, username)) as { success: boolean, error: string };
+    }
+
+    public acceptInvite = (invite: InviteDto) => {
+        this.connection.send("AcceptInvite", invite.inviteId);
+    };
+
+    public rejectInvite = (invite: InviteDto) => {
+        this.connection.send("RejectInvite", invite.inviteId);
+    };
 
     public getMessages = async (id: number) => {
         if (!this.chatCache.has(id)) {

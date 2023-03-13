@@ -10,6 +10,9 @@ public class Account : BaseEntity
     public virtual ICollection<Group> Groups { get; set; }
     public virtual ICollection<Chat> Chats { get; set; }
     public virtual Settings Settings { get; set; }
+    public virtual ICollection<Role> Roles { get; set; }
+    public virtual ICollection<Invite> SentInvites { get; set; }
+    public virtual ICollection<Invite> ReceivedInvites { get; set; }
 
     // For session handling
     public string? RefreshToken { get; set; }

@@ -16,7 +16,11 @@ internal class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Logging.ClearProviders()
-                       .AddColorConsoleLogger();
+                       .AddColorConsoleLogger(options =>
+                       {
+                           options.Mask.Add(LogLevel.Debug);
+                           options.Mask.Add(LogLevel.Trace);
+                       });
 
         builder.Services.AddAuthentication(options =>
         {

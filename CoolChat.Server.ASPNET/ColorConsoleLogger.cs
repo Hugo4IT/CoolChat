@@ -45,19 +45,24 @@ public class ColorConsoleLogger : ILogger
             return;
         
         ConsoleColor originalColor = Console.ForegroundColor;
+    
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write($"{DateTime.Now.ToString("o")} ");
+
+        Console.Write(new string(' ', (LogLevelPadding - logLevel.ToString().Length)));
 
         Console.ForegroundColor = ConsoleColor.White;
         Console.Write('[');
 
         Console.ForegroundColor = config.ColorMap[logLevel];
-        Console.Write(logLevel.ToString().PadLeft(LogLevelPadding));
+        Console.Write(logLevel.ToString());
 
         Console.ForegroundColor = ConsoleColor.White;
         Console.Write("]: ");
 
 
         IEnumerable<string> lines = formatter(state, exception).Split("\n")
-                                                               .SelectMany(s => s.Chunk(Console.BufferWidth - 15)
+                                                               .SelectMany(s => s.Chunk(Console.BufferWidth - 49)
                                                                                  .Select(s => new string(s)));
         Console.ForegroundColor = config.ColorMap[logLevel];
         Console.Write(lines.First());
@@ -65,7 +70,7 @@ public class ColorConsoleLogger : ILogger
         foreach (string line in lines.Skip(1))
         {
             Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("\n            |  ");
+            Console.Write($"\n{new string(' ', 49)}");
             Console.ForegroundColor = config.ColorMap[logLevel];
             Console.Write(line);
         }

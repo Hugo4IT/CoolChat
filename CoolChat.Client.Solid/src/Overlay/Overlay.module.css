@@ -1,0 +1,82 @@
+@keyframes appear {
+    0% {
+        background-color: rgba(0, 0, 0, 0.0);
+        backdrop-filter: blur(0px);
+    }
+    100% {
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+}
+
+@keyframes out {
+    0% {
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+    100% {
+        background-color: rgba(0, 0, 0, 0.0);
+        backdrop-filter: blur(0px);
+    }
+}
+
+@keyframes content-appear {
+    0% {
+        opacity: 0;
+        transform: scale(0.9) translate(0, 50px);
+    }
+    100% {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes content-out {
+    0% {
+        opacity: 1;
+        transform: none;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+}
+
+.OverlayArea {
+    display: none;
+
+    justify-content: center;
+    align-items: center;
+
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    
+    &.Animating {
+        display: flex;
+    }
+
+    .OverlayContainer {
+        .Overlay {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+
+    &.Appear {
+        animation: appear 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+
+        .Overlay {
+            animation: content-appear 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+    }
+    
+    &.Out {
+        animation: out 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+
+        .Overlay {
+            animation: content-out 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+    }
+}

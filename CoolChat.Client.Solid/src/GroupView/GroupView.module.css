@@ -32,7 +32,7 @@
     height: 100%;
 
     display: grid;
-    grid-template-columns: 250px 1fr;
+    grid-template-columns: 250px 1fr 300px;
 
     .Sidebar {
         background-color: var(--channel-bar-background-color);
@@ -102,6 +102,119 @@
         overflow: hidden;
 
         max-height: inherit;
+    }
+
+    .MembersBar {
+        background-color: var(--members-bar-background-color);
+        
+        .MembersBarContents {
+            height: 100%;
+            box-sizing: border-box;
+
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 8px;
+
+            .MembersToolbar {
+                margin-top: auto;
+
+                display: flex;
+                justify-content: space-evenly;
+
+                padding: 8px;
+                
+                background-color: var(--members-toolbar-background-color);
+                border-radius: 16px;
+
+                .MembersToolbarGroupName {
+                    font-weight: 700;
+                    text-align: center;
+                    margin-top: 4px;
+                }
+
+                .MembersToolbarButton {
+                    border: none;
+                    background: transparent;
+
+                    padding: 8px;
+                    color: var(--color);
+
+                    border-radius: 500px;
+
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+
+                    transition: transform 0.15s cubic-bezier(0.165, 0.84, 0.44, 1),
+                                color 0.15s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+                    &:hover {
+                        /* background: var(--button-background-color-hovered); */
+                        color: var(--oc-blue-3);
+                        transform: scale(1.1);
+                        cursor: pointer;
+                    }
+
+                    &:active {
+                        transform: scale(1);
+                        color: var(--oc-blue-3);
+                    }
+
+                    &:focus {
+                        outline: none;
+                    }
+                }
+            }
+
+            .MemberButton {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+
+                padding: 8px 16px;
+
+                border: none;
+                border-radius: 8px;
+
+                font-size: inherit;
+                font-family: inherit;
+                font-weight: 700;
+                
+                color: inherit;
+                background-color: var(--channel-button-background-color);
+
+                transition: background-color 0.15s cubic-bezier(0.165, 0.84, 0.44, 1),
+                            color 0.15s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+                &.Dim {
+                    background-color: transparent;
+                }
+
+                &.Active {
+                    background-color: var(--accent-background-color);
+                    color: var(--accent-color);
+                }
+
+                &:hover {
+                    cursor: pointer;
+                    background-color: var(--channel-button-background-color-hovered);
+
+                    &.Dim {
+                        background-color: var(--channel-button-background-color);
+                    }
+                    &.Active {
+                        background-color: var(--accent-background-color-hovered);
+                        color: var(--accent-color-hovered);
+                    }
+                }
+
+                &:focus {
+                    outline: none;
+                }
+            }
+        }
     }
 }
 

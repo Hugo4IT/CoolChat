@@ -1,4 +1,4 @@
-export interface ChannelModel {
+export interface ChannelDto {
     id: number;
     chatId: number;
     name: string;

@@ -1,4 +1,5 @@
-import { Component, Show } from "solid-js";
+import hljs from "highlight.js";
+import { Component, onMount, Show } from "solid-js";
 
 import styles from "./Message.module.css";
 
@@ -24,6 +25,12 @@ export const Message: Component<MessageProps> = (props: MessageProps) => {
                            : `${props.date!.toLocaleDateString()} ${props.date!.toLocaleTimeString()}`;
     }
 
+    let content: HTMLDivElement|undefined;
+
+    // onMount(() => {
+    //     content!.querySelectorAll("pre code").forEach(el => hljs.highlightElement(el as HTMLElement));
+    // })
+
     return (
         <div class={styles.MessageContainer}
              classList={{
@@ -34,7 +41,7 @@ export const Message: Component<MessageProps> = (props: MessageProps) => {
             <Show when={!hideAuthor}>
                 <span class={styles.Author}>{props.author}</span>
             </Show>
-            <div class={styles.Message} innerHTML={props.content}>
+            <div class={styles.Message} innerHTML={props.content} ref={content}>
             </div>
             <Show when={!hideDate}>
                 <span class={styles.Date}>{dateString}</span>

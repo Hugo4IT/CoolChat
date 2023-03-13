@@ -26,3 +26,73 @@ code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
         monospace;
 }
+
+.emoji-picker {
+    height: 300px;
+    overflow-y: auto;
+
+    background-color: var(--oc-gray-8);
+
+    border: solid 16px transparent;
+    border-radius: 16px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .emoji-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .emoji-section-title {
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        .emoji-items {
+            display: grid;
+            gap: 4px;
+            grid-template-columns: repeat(6, 1fr);
+            
+            border-radius: 8px;
+            background-color: var(--oc-gray-9);
+            padding: 4px 0;
+
+            .emoji-button {
+                background: transparent;
+                border: none;
+
+                font-size: 24px;
+
+                padding: 0;
+                box-sizing: border-box;
+
+                border-radius: 4px;
+
+                &:hover {
+                    background-color: var(--oc-gray-7);
+                }
+
+                &:focus {
+                    outline: none;
+                }
+            }
+        }
+    }
+}
+
+.cc- {
+    &Keyword {
+        color: var(--oc-blue-5);
+    }
+
+    &String {
+        color: var(--oc-teal-5)
+    }
+
+    &Comment {
+        color: var(--oc-gray-6);
+        font-style: italic;
+    }
+}

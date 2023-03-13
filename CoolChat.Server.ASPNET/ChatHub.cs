@@ -1,9 +1,11 @@
 using CoolChat.Domain.Interfaces;
 using CoolChat.Domain.Models;
-using Ganss.Xss;
+using CoolChat.Server.ASPNET.Controllers;
 using Markdig;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+
+using MD = Markdig.Markdown;
 
 namespace CoolChat.Server.ASPNET;
 
@@ -13,12 +15,16 @@ public class ChatHub : Hub
     private readonly static ConnectionMapping<string> _connections = new();
 
     private readonly IAccountService _accountService;
+    private readonly IGroupService _groupService;
     private readonly IChatService _chatService;
+    private readonly DataContext _dataContext;
 
-    public ChatHub(IAccountService accountService, IChatService chatService)
+    public ChatHub(IAccountService accountService, IGroupService groupService, IChatService chatService, DataContext dataContext)
     {
         _accountService = accountService;
+        _groupService = groupService;
         _chatService = chatService;
+        _dataContext = dataContext;
     }
 
     private Task Join(int chatId) =>
@@ -27,6 +33,15 @@ public class ChatHub : Hub
     private Task Leave(int chatId) =>
         Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
     
+    private async Task SubscribeToGroup(string username, Group group)
+    {
+        List<string> connections = _connections.GetConnections(username).ToList();
+        List<int> chatIds = group.Channels.Select(c => c.Id).ToList();
+
+        // Add all connections of this user to all the group's channels
+        await Task.WhenAll(connections.SelectMany(connection => chatIds.Select(chatId => Groups.AddToGroupAsync(connection, chatId.ToString()))));
+    }
+    
     public async Task SendMessage(int chatId, string content)
     {
         Chat? chat = _chatService.GetById(chatId);
@@ -34,7 +49,21 @@ public class ChatHub : Hub
         if (chat == null)
             return;
 
-        content = Markdown.ToHtml(new HtmlSanitizer().Sanitize(content)).Trim();
+        MarkdownPipeline pipeline = new MarkdownPipelineBuilder()
+            .DisableHeadings()
+            .DisableHtml()
+            .UseSmartyPants()
+            .UseTaskLists()
+            .UseListExtras()
+            .UseEmphasisExtras()
+            .UseAutoIdentifiers()
+            .UseDefinitionLists()
+            .UseEmojiAndSmiley()
+            .UsePipeTables()
+            .UseGridTables()
+            .Build();
+
+        content = MD.ToHtml(content, pipeline).Trim();
 
         if (content.Length == 0)
             return;
@@ -51,14 +80,94 @@ public class ChatHub : Hub
         await Clients.Group(chat.Id.ToString()).SendAsync("ReceiveMessage", chatId, message.Author.Name, message.Content, message.Date);
     }
 
-    public async Task TryJoin(int chatId)
+    public struct CreateInviteResponse
+    {
+        public bool Success { get; set; }
+        public string Error { get; set; }
+    }
+
+    public async Task<CreateInviteResponse> CreateInvite(int groupId, string to)
     {
         Account account = _accountService.GetByUsername(Context.User!.Identity!.Name!)!;
+        Account? recipient = _accountService.GetByUsername(to);
+        Group? group = _groupService.GetById(groupId);
 
-        if (!account.Chats.Any(c => c.Id == chatId))
+        if (recipient == null)
+            return new CreateInviteResponse { Success = false, Error = "This account doesn't exist" };
+        
+        if (account.Id == recipient.Id)
+            return new CreateInviteResponse { Success = false, Error = "Can't send an invite to yourself, dummy" };
+
+        if (group == null)
+            return new CreateInviteResponse { Success = false, Error = "You're trying to invite this person to a group that doesn't exist" };
+        
+        if (!account.CanInviteUserTo(group))
+            return new CreateInviteResponse { Success = false, Error = "You aren't allowed to invite people to this group" };
+
+        Invite invite = new Invite
+        {
+            From = account,
+            To = recipient,
+            Type = InviteType.Group,
+            InvitedId = group.Id,
+            Expires = DateTime.Now.AddDays(7),
+        };
+
+        _dataContext.Invites.Add(invite);
+        await _dataContext.SaveChangesAsync();
+
+        await Clients.Users(_connections.GetConnections(recipient.Name))
+                     .SendAsync("ReceiveGroupInvite", group.Id, group.Name, group.Members.Count, group.Icon, account.Name, account.Id);
+                    
+        return new CreateInviteResponse { Success = true, Error = "" };
+    }
+
+    public async Task AcceptInvite(int inviteId)
+    {
+        Invite? invite = _dataContext.Invites.FirstOrDefault(i => i.Id == inviteId);
+
+        if (invite == null)
+            return;
+        
+        Group? group = _groupService.GetById(invite.InvitedId);
+
+        if (invite.Expires < DateTime.Now || group == null || !invite.From.CanInviteUserTo(group))
+        {
+            _dataContext.Invites.Remove(invite);
+            await _dataContext.SaveChangesAsync();
+            return;
+        }
+
+        Account account = _accountService.GetByUsername(Context.User!.Identity!.Name!)!;
+
+        if (account.Id != invite.To!.Id)
             return;
 
-        await Join(chatId);
+        _groupService.AddMember(group, account);
+
+        _dataContext.Invites.Remove(invite);
+        await _dataContext.SaveChangesAsync();
+
+        await SubscribeToGroup(account.Name, group);
+
+        await Clients.Users(_connections.GetConnections(account.Name))
+                     .SendAsync("GroupJoined", GroupDto.FromModel(group));
+    }
+
+    public async Task RejectInvite(int inviteId)
+    {
+        Invite? invite = _dataContext.Invites.FirstOrDefault(i => i.Id == inviteId);
+
+        if (invite == null)
+            return;
+
+        Account account = _accountService.GetByUsername(Context.User!.Identity!.Name!)!;
+
+        if (account.Id != invite.To!.Id)
+            return;
+
+        _dataContext.Invites.Remove(invite);
+        await _dataContext.SaveChangesAsync();
     }
 
     public override async Task OnConnectedAsync()

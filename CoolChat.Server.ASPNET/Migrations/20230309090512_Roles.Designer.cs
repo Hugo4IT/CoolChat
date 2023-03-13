@@ -3,6 +3,7 @@ using System;
 using CoolChat.Server.ASPNET;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoolChat.Server.ASPNET.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230309090512_Roles")]
+    partial class Roles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -200,36 +203,6 @@ namespace CoolChat.Server.ASPNET.Migrations
                     b.ToTable("GroupSettings");
                 });
 
-            modelBuilder.Entity("CoolChat.Domain.Models.Invite", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("Expires")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("FromId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("InvitedId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ToId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FromId");
-
-                    b.HasIndex("ToId");
-
-                    b.ToTable("Invites");
-                });
-
             modelBuilder.Entity("CoolChat.Domain.Models.Message", b =>
                 {
                     b.Property<int>("Id")
@@ -322,9 +295,6 @@ namespace CoolChat.Server.ASPNET.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("CanAddMembers")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("CanEditOtherUsersMessages")
@@ -465,25 +435,6 @@ namespace CoolChat.Server.ASPNET.Migrations
                     b.Navigation("Settings");
                 });
 
-            modelBuilder.Entity("CoolChat.Domain.Models.Invite", b =>
-                {
-                    b.HasOne("CoolChat.Domain.Models.Account", "From")
-                        .WithMany("SentInvites")
-                        .HasForeignKey("FromId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CoolChat.Domain.Models.Account", "To")
-                        .WithMany("ReceivedInvites")
-                        .HasForeignKey("ToId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("From");
-
-                    b.Navigation("To");
-                });
-
             modelBuilder.Entity("CoolChat.Domain.Models.Message", b =>
                 {
                     b.HasOne("CoolChat.Domain.Models.Account", "Author")
@@ -536,10 +487,6 @@ namespace CoolChat.Server.ASPNET.Migrations
             modelBuilder.Entity("CoolChat.Domain.Models.Account", b =>
                 {
                     b.Navigation("Messages");
-
-                    b.Navigation("ReceivedInvites");
-
-                    b.Navigation("SentInvites");
                 });
 
             modelBuilder.Entity("CoolChat.Domain.Models.Channel", b =>

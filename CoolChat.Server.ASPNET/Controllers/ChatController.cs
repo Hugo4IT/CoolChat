@@ -2,7 +2,6 @@ using System.Security.Claims;
 using System.Text;
 using CoolChat.Domain.Interfaces;
 using CoolChat.Domain.Models;
-using Ganss.Xss;
 using Markdig;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -11,10 +11,12 @@ namespace CoolChat.Server.ASPNET.Services;
 public class AccountService : IAccountService
 {
     private readonly DataContext _dataContext;
+    private readonly ILogger<AccountService> _logger;
 
-    public AccountService(DataContext dataContext)
+    public AccountService(DataContext dataContext, ILogger<AccountService> logger)
     {
         _dataContext = dataContext;
+        _logger = logger;
     }
 
     public LoginResult CreateAccount(string username, string password)
@@ -56,11 +58,15 @@ public class AccountService : IAccountService
             Messages = new List<Message>(),
             Profile = new(),
             Settings = new(),
+            Roles = new List<Role>(),
 
             RefreshTokenExpiryTime = DateTime.Now,
         };
 
         _dataContext.Accounts.Add(account);
+        _dataContext.SaveChanges();
+
+        _logger.LogInformation($"Account created with name \"{account.Name.ToSafe()}\"");
 
         return new LoginResult
         {
@@ -99,6 +105,8 @@ public class AccountService : IAccountService
                 Account = account,
             };
         }
+
+        _logger.LogTrace($"\"{account.Name.ToSafe()}\" logged in");
         
         return new LoginResult
         {

@@ -9,11 +9,11 @@ import { FaSolidImage, FaSolidTag } from "solid-icons/fa";
 import { FormTitle } from "../Form/FormTitle";
 import { FormFileInput } from "../Form/FormFileInput";
 import { getToken } from "../JwtHelper";
-import { GroupCreateResponse } from "../interfaces/GroupCreateResponse";
 import { API_ROOT } from "../Globals";
+import { GroupDto } from "../interfaces/GroupDto";
 
 interface CreateGroupFormProps {
-    exitCallback: (success: boolean, response: GroupCreateResponse|null) => void;
+    exitCallback: (success: boolean, response: GroupDto|null) => void;
 }
 
 export const CreateGroupForm: Component<CreateGroupFormProps> = (props: CreateGroupFormProps) => {
@@ -59,7 +59,7 @@ export const CreateGroupForm: Component<CreateGroupFormProps> = (props: CreateGr
             }
         })
             .then(res => res.json())
-            .then((res: GroupCreateResponse) => {
+            .then((res: GroupDto) => {
                 props.exitCallback(true, res);
             })
             .catch(res => {

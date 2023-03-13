@@ -6,6 +6,7 @@ import styles from "./Form.module.css";
 interface FormTextInputProps {
     error?: string;
     valueCallback: (value: string) => void,
+    onSubmit?: (value: string) => void,
     icon: JSX.Element;
     placeholder: string;
     kind?: "text"|"password";
@@ -25,6 +26,14 @@ export const FormTextInput: Component<FormTextInputProps> = (props: FormTextInpu
         props.valueCallback(inputRef!.value);
     };
 
+    const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key == "Enter" && props.onSubmit != undefined) {
+            event.preventDefault();
+            event.stopPropagation();
+            props.onSubmit(inputRef!.value);
+        }
+    };
+
     return (
         <div class={styles.FormSection} classList={{[styles.FormSectionError]: typeof props.error !== "undefined"}}>
             <label for={props.name}>{props.title}</label>
@@ -32,7 +41,13 @@ export const FormTextInput: Component<FormTextInputProps> = (props: FormTextInpu
                 <div class={styles.FormTextInputIconContainer}>
                     {iconElement}
                 </div>
-                <input type={kind} name={props.name} id={props.name} ref={inputRef} onChange={onChange} placeholder={props.placeholder} />
+                <input type={kind}
+                       name={props.name}
+                       id={props.name}
+                       ref={inputRef}
+                       onChange={onChange}
+                       placeholder={props.placeholder}
+                       onKeyDown={onKeyDown} />
             </div>
             <span class={styles.FormTextInputError}
                     classList={{
