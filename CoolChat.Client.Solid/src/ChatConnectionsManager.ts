@@ -30,16 +30,14 @@ export class ChatConnectionsManager {
         });
 
         this.connection.on("ReceiveGroupInvite", (invite: InviteDto) => {
-            for (const callback of this.onGroupInviteReceived) {
+            for (const callback of this.onGroupInviteReceived)
                 callback(invite);
-            }
         });
 
         this.connection.on("GroupJoined", (group: GroupDto) => {
-            for (const callback of this.onGroupJoined) {
+            for (const callback of this.onGroupJoined)
                 callback(group);
-            }
-        })
+        });
 
         this.chatCache = new Map();
     }
@@ -60,7 +58,7 @@ export class ChatConnectionsManager {
     }
 
     public sendInvite = async (groupId: number, username: string) => {
-        return (await this.connection.invoke("CreateInvite", groupId, username)) as { success: boolean, error: string };
+        return await this.connection.invoke("CreateInvite", groupId, username);
     }
 
     public acceptInvite = (invite: InviteDto) => {

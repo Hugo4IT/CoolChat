@@ -18,20 +18,16 @@ public class ChatHub : Hub
     private readonly IGroupService _groupService;
     private readonly IChatService _chatService;
     private readonly DataContext _dataContext;
+    private readonly ILogger<ChatHub> _logger;
 
-    public ChatHub(IAccountService accountService, IGroupService groupService, IChatService chatService, DataContext dataContext)
+    public ChatHub(IAccountService accountService, IGroupService groupService, IChatService chatService, DataContext dataContext, ILogger<ChatHub> logger)
     {
         _accountService = accountService;
         _groupService = groupService;
         _chatService = chatService;
         _dataContext = dataContext;
+        _logger = logger;
     }
-
-    private Task Join(int chatId) =>
-        Groups.AddToGroupAsync(Context.ConnectionId, chatId.ToString());
-    
-    private Task Leave(int chatId) =>
-        Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
     
     private async Task SubscribeToGroup(string username, Group group)
     {
@@ -39,7 +35,16 @@ public class ChatHub : Hub
         List<int> chatIds = group.Channels.Select(c => c.Id).ToList();
 
         // Add all connections of this user to all the group's channels
-        await Task.WhenAll(connections.SelectMany(connection => chatIds.Select(chatId => Groups.AddToGroupAsync(connection, chatId.ToString()))));
+        await Task.WhenAll(connections.SelectMany(connection => chatIds.Select(chatId => Groups.AddToGroupAsync(connection, $"c_{chatId}"))));
+    }
+
+    private async Task UnSubscribeFromGroup(string username, Group group)
+    {
+        List<string> connections = _connections.GetConnections(username).ToList();
+        List<int> chatIds = group.Channels.Select(c => c.Id).ToList();
+
+        // Add all connections of this user to all the group's channels
+        await Task.WhenAll(connections.SelectMany(connection => chatIds.Select(chatId => Groups.RemoveFromGroupAsync(connection, $"c_{chatId}"))));
     }
     
     public async Task SendMessage(int chatId, string content)
@@ -50,7 +55,6 @@ public class ChatHub : Hub
             return;
 
         MarkdownPipeline pipeline = new MarkdownPipelineBuilder()
-            .DisableHeadings()
             .DisableHtml()
             .UseSmartyPants()
             .UseTaskLists()
@@ -77,7 +81,8 @@ public class ChatHub : Hub
 
         _chatService.AddMessage(chat, message);
 
-        await Clients.Group(chat.Id.ToString()).SendAsync("ReceiveMessage", chatId, message.Author.Name, message.Content, message.Date);
+        await Clients.Group($"c_{chat.Id}")
+                     .SendAsync("ReceiveMessage", chatId, message.Author.Name, message.Content, message.Date);
     }
 
     public struct CreateInviteResponse
@@ -116,8 +121,17 @@ public class ChatHub : Hub
         _dataContext.Invites.Add(invite);
         await _dataContext.SaveChangesAsync();
 
-        await Clients.Users(_connections.GetConnections(recipient.Name))
-                     .SendAsync("ReceiveGroupInvite", group.Id, group.Name, group.Members.Count, group.Icon, account.Name, account.Id);
+        await Clients.Group($"u_{recipient.Id}")
+                     .SendAsync("ReceiveGroupInvite", new InviteDto
+                     {
+                         InviteId = invite.Id,
+                         GroupId = group.Id,
+                         GroupName = group.Name,
+                         MemberCount = group.Members.Count,
+                         GroupIcon = group.Icon,
+                         SenderName = account.Name,
+                         SenderId = account.Id
+                     });
                     
         return new CreateInviteResponse { Success = true, Error = "" };
     }
@@ -150,7 +164,7 @@ public class ChatHub : Hub
 
         await SubscribeToGroup(account.Name, group);
 
-        await Clients.Users(_connections.GetConnections(account.Name))
+        await Clients.Group($"u_{account.Id}")
                      .SendAsync("GroupJoined", GroupDto.FromModel(group));
     }
 
@@ -178,9 +192,10 @@ public class ChatHub : Hub
 
         Account account = _accountService.GetByUsername(name)!;
 
-        foreach (Chat chat in account.Chats)
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"u_{account.Id}");
+        foreach (Group group in account.Groups)
         {
-            await Join(chat.Id);
+            await SubscribeToGroup(account.Name, group);
         }
         
         await base.OnConnectedAsync();
@@ -194,9 +209,10 @@ public class ChatHub : Hub
 
         Account account = _accountService.GetByUsername(name)!;
 
-        foreach (Chat chat in account.Chats)
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"u_{account.Id}");
+        foreach (Group group in account.Groups)
         {
-            await Leave(chat.Id);
+            await UnSubscribeFromGroup(account.Name, group);
         }
 
         await base.OnDisconnectedAsync(exception);

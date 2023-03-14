@@ -26,6 +26,10 @@ public class ColorConsoleLogger : ILogger
     private readonly Func<ColorConsoleLoggerConfiguration> _getConfig;
     private const int LogLevelPadding = 11; // Longest LogLevel string (Information) = 11
 
+    // Use Mutex to prevent multiple threads writing to console at the same time
+    // causing the log to scramble.
+    private static Mutex Lock = new();
+
     public ColorConsoleLogger(string name, Func<ColorConsoleLoggerConfiguration> getConfig) =>
         (_name, _getConfig) = (name, getConfig);
 
@@ -44,38 +48,35 @@ public class ColorConsoleLogger : ILogger
         if (config.EventId != 0 && config.EventId != eventId)
             return;
         
-        ConsoleColor originalColor = Console.ForegroundColor;
-    
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.Write($"{DateTime.Now.ToString("o")} ");
-
-        Console.Write(new string(' ', (LogLevelPadding - logLevel.ToString().Length)));
-
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.Write('[');
-
-        Console.ForegroundColor = config.ColorMap[logLevel];
-        Console.Write(logLevel.ToString());
-
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.Write("]: ");
-
-
+        // Constructing message before lock to minimize blocked time
+        string timestamp = $"{DateTime.Now.ToString("o")} ";
+        string padding = new string(' ', (LogLevelPadding - logLevel.ToString().Length));
         IEnumerable<string> lines = formatter(state, exception).Split("\n")
                                                                .SelectMany(s => s.Chunk(Console.BufferWidth - 49)
                                                                                  .Select(s => new string(s)));
-        Console.ForegroundColor = config.ColorMap[logLevel];
-        Console.Write(lines.First());
+        string lineBreakPrefix = $"\n{new string(' ', 49)}";
 
-        foreach (string line in lines.Skip(1))
+        lock (Lock)
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write($"\n{new string(' ', 49)}");
-            Console.ForegroundColor = config.ColorMap[logLevel];
-            Console.Write(line);
-        }
+            ConsoleColor originalColor = Console.ForegroundColor;
+        
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.Write(timestamp + padding);
 
-        Console.ForegroundColor = originalColor;
-        Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write('[');
+
+            Console.ForegroundColor = config.ColorMap[logLevel];
+            Console.Write(logLevel.ToString());
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("]: ");
+            
+            Console.ForegroundColor = config.ColorMap[logLevel];
+            Console.Write(string.Join(lineBreakPrefix, lines));
+
+            Console.ForegroundColor = originalColor;
+            Console.WriteLine();
+        }
     }
 }

@@ -1,5 +1,4 @@
 import { Component, createEffect, createResource, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
-import { createStore, produce } from "solid-js/store";
 
 import styles from "./Main.module.css";
 import formStyles from "../Form/Form.module.css";
@@ -9,12 +8,9 @@ import { getToken, logout } from "../JwtHelper";
 import { CreateGroupForm } from "../CreateGroupForm/CreateGroupForm";
 import { API_ROOT } from "../Globals";
 import { GroupView } from "../GroupView/GroupView";
-import { MyChatsResponse } from "../interfaces/MyChatsReponse";
 import { MessageModel } from "../interfaces/MessageModel";
 import { ChatConnectionsManager } from "../ChatConnectionsManager";
-import { GetMessagesResponse } from "../interfaces/GetMessagesResponse";
 import { GroupDto } from "../interfaces/GroupDto";
-import { Resource } from "../interfaces/Resource";
 import { InviteDto } from "../interfaces/InviteDto";
 import { Overlay } from "../Overlay/Overlay";
 import { Form } from "../Form/Form";
@@ -107,6 +103,8 @@ export const Main: Component<MainProps> = (props: MainProps) => {
     });
 
     cc.onGroupInviteReceived.push(async (invite: InviteDto) => {
+        console.log("Recieved invite: ", invite);
+
         mutateInvites([...invites()!, invite]);
 
         if (view() == "main") {
@@ -190,9 +188,9 @@ export const Main: Component<MainProps> = (props: MainProps) => {
                             <FormTitle>You have been invited to join {invitePopup()!.groupName}</FormTitle>
                             <img src={`${API_ROOT}/api/Resource/Icon?id=${invitePopup()!.groupIcon.id}`} class={formStyles.PreviewImage}/>
                             <FormButtons>
-                                <FormButton kind="primary" loading={false} onClick={() => cc.rejectInvite(invitePopup()!)}>Reject</FormButton>
-                                <FormButton kind="secondary" loading={false} onClick={() => setInvitePopup(undefined)}>Later</FormButton>
-                                <FormButton kind="primary" loading={false} onClick={() => cc.acceptInvite(invitePopup()!)}>Accept</FormButton>
+                                <FormButton kind="primary" loading={false} onClick={() => { cc.rejectInvite(invitePopup()!); setShowInvitePopup(false); }}>Reject</FormButton>
+                                <FormButton kind="secondary" loading={false} onClick={() => setShowInvitePopup(false)}>Later</FormButton>
+                                <FormButton kind="primary" loading={false} onClick={() => { cc.acceptInvite(invitePopup()!); setShowInvitePopup(false); }}>Accept</FormButton>
                             </FormButtons>
                         </Form>
                     </Show>

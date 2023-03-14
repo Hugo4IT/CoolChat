@@ -22,7 +22,7 @@ export const FormTextInput: Component<FormTextInputProps> = (props: FormTextInpu
 
     let inputRef: HTMLInputElement|undefined;
 
-    const onChange = () => {
+    const onInput = () => {
         props.valueCallback(inputRef!.value);
     };
 
@@ -45,7 +45,7 @@ export const FormTextInput: Component<FormTextInputProps> = (props: FormTextInpu
                        name={props.name}
                        id={props.name}
                        ref={inputRef}
-                       onChange={onChange}
+                       onInput={onInput}
                        placeholder={props.placeholder}
                        onKeyDown={onKeyDown} />
             </div>

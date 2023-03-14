@@ -48,6 +48,8 @@
             padding: 16px;
 
             .ChannelButton {
+                position: relative;
+
                 display: flex;
                 flex-direction: row;
                 align-items: center;
@@ -59,34 +61,42 @@
                 border-radius: 8px;
 
                 font-size: inherit;
-                font-family: inherit;
+                font-family: var(--display-font);
                 font-weight: 700;
                 
                 color: inherit;
-                background-color: var(--channel-button-background-color);
+                background: var(--channel-button-background);
+                background-position: 0% 0%;
+                background-size: 100% 100%;
+                background-repeat: no-repeat;
 
-                transition: background-color 0.15s cubic-bezier(0.165, 0.84, 0.44, 1),
-                            color 0.15s cubic-bezier(0.165, 0.84, 0.44, 1);
+                transition: background-position 0.15s cubic-bezier(0.165, 0.84, 0.44, 1),
+                            background-size 0.15s cubic-bezier(0.165, 0.84, 0.44, 1);
 
                 &.Dim {
                     background-color: transparent;
                 }
 
                 &.Active {
-                    background-color: var(--accent-background-color);
-                    color: var(--accent-color);
+                    background: linear-gradient(to top right,
+                                                var(--accent-background-7),
+                                                var(--accent-background-5));
+                    background-position: 0% 0%;
+                    background-size: 100% 100%;
+                    background-repeat: no-repeat;
                 }
 
                 &:hover {
                     cursor: pointer;
-                    background-color: var(--channel-button-background-color-hovered);
+                    /* background: var(--channel-button-background-color-hovered); */
 
                     &.Dim {
-                        background-color: var(--channel-button-background-color);
+                        background: var(--channel-button-background-color);
                     }
+
                     &.Active {
-                        background-color: var(--accent-background-color-hovered);
-                        color: var(--accent-color-hovered);
+                        background-position: top right;
+                        background-size: 200% 200%;
                     }
                 }
 

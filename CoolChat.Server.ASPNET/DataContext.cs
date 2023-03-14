@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using CoolChat.Domain.Models;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CoolChat.Server.ASPNET;
 
@@ -27,54 +24,37 @@ public class DataContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        EntityTypeBuilder<Account> account = builder.Entity<Account>();
-        account.HasOne(a => a.Profile);
-        account.HasOne(a => a.Settings);
-        account.HasMany(a => a.Messages).WithOne(m => m.Author);
-        account.HasMany(a => a.Chats).WithMany(c => c.Members);
-        account.HasMany(a => a.Roles).WithMany(r => r.Accounts);
-        account.HasMany(a => a.SentInvites).WithOne(i => i.From);
-        account.HasMany(a => a.ReceivedInvites).WithOne(i => i.To);
+        builder.Entity<Account>().HasOne(a => a.Profile);
+        builder.Entity<Account>().HasOne(a => a.Settings);
+        builder.Entity<Account>().HasMany(a => a.Messages).WithOne(m => m.Author);
+        builder.Entity<Account>().HasMany(a => a.Roles).WithMany(r => r.Accounts);
+        builder.Entity<Account>().HasMany(a => a.SentInvites).WithOne(i => i.From);
+        builder.Entity<Account>().HasMany(a => a.ReceivedInvites).WithOne(i => i.To);
         
-        EntityTypeBuilder<Group> group = builder.Entity<Group>();
-        group.HasMany(g => g.Channels);
-        group.HasMany(g => g.Members).WithMany(a => a.Groups);
-        group.HasOne(g => g.Icon);
-        group.HasMany(g => g.Roles).WithOne(r => r.Group);
-        group.HasOne(g => g.Owner);
-        group.HasOne(g => g.Settings);
+        builder.Entity<Group>().HasMany(g => g.Channels);
+        builder.Entity<Group>().HasMany(g => g.Members).WithMany(a => a.Groups);
+        builder.Entity<Group>().HasOne(g => g.Icon);
+        builder.Entity<Group>().HasMany(g => g.Roles).WithOne(r => r.Group);
+        builder.Entity<Group>().HasOne(g => g.Owner);
+        builder.Entity<Group>().HasOne(g => g.Settings);
 
-        EntityTypeBuilder<Channel> channel = builder.Entity<Channel>();
-        channel.HasOne(c => c.Chat);
-        channel.HasMany(c => c.AllowedRoles);
+        builder.Entity<Channel>().HasOne(c => c.Chat);
+        builder.Entity<Channel>().HasMany(c => c.AllowedRoles);
 
-        EntityTypeBuilder<Chat> chat = builder.Entity<Chat>();
-        chat.HasMany(c => c.Messages).WithOne(m => m.ParentChat);
-        chat.HasMany(c => c.Members).WithMany(m => m.Chats);
+        builder.Entity<Chat>().HasMany(c => c.Messages).WithOne(m => m.ParentChat);
+        builder.Entity<Chat>().HasMany(c => c.Members);
 
-        EntityTypeBuilder<Message> message = builder.Entity<Message>();
-        message.HasOne(m => m.ParentChat).WithMany(c => c.Messages);
-        message.HasOne(m => m.Author).WithMany(a => a.Messages);
+        builder.Entity<Message>().HasOne(m => m.ParentChat).WithMany(c => c.Messages);
+        builder.Entity<Message>().HasOne(m => m.Author).WithMany(a => a.Messages);
 
-        EntityTypeBuilder<Profile> profile = builder.Entity<Profile>();
-        
-        EntityTypeBuilder<Settings> settings = builder.Entity<Settings>();
+        builder.Entity<GroupSettings>().HasMany(s => s.BannedAccounts);
+        builder.Entity<GroupSettings>().HasMany(s => s.RolePermissions);
 
-        EntityTypeBuilder<GroupSettings> groupSettings = builder.Entity<GroupSettings>();
-        groupSettings.HasMany(s => s.BannedAccounts);
-        groupSettings.HasMany(s => s.RolePermissions);
+        builder.Entity<Role>().HasMany(r => r.Accounts).WithMany(a => a.Roles);
+        builder.Entity<Role>().HasOne(r => r.Group).WithMany(g => g.Roles);
+        builder.Entity<Role>().HasOne(r => r.Permissions);
 
-        EntityTypeBuilder<Resource> resource = builder.Entity<Resource>();
-
-        EntityTypeBuilder<Role> role = builder.Entity<Role>();
-        role.HasMany(r => r.Accounts).WithMany(a => a.Roles);
-        role.HasOne(r => r.Group).WithMany(g => g.Roles);
-        role.HasOne(r => r.Permissions);
-
-        EntityTypeBuilder<RolePermissions> rolePermissions = builder.Entity<RolePermissions>();
-
-        EntityTypeBuilder<Invite> invite = builder.Entity<Invite>();
-        invite.HasOne(i => i.From).WithMany(a => a.SentInvites);
-        invite.HasOne(i => i.To).WithMany(a => a.ReceivedInvites);
+        builder.Entity<Invite>().HasOne(i => i.From).WithMany(a => a.SentInvites);
+        builder.Entity<Invite>().HasOne(i => i.To).WithMany(a => a.ReceivedInvites);
     }
 }

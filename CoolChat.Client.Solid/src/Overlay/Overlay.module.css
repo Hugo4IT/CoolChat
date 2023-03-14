@@ -26,14 +26,14 @@
         transform: scale(0.9) translate(0, 50px);
     }
     100% {
-        opacity: 1;
+        opacity: .8;
         transform: none;
     }
 }
 
 @keyframes content-out {
     0% {
-        opacity: 1;
+        opacity: .8;
         transform: none;
     }
     100% {
@@ -61,6 +61,7 @@
         .Overlay {
             display: flex;
             flex-direction: column;
+            opacity: .8;
         }
     }
 

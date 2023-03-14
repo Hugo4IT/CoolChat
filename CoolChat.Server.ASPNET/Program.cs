@@ -6,10 +6,8 @@ using CoolChat.Domain.Interfaces;
 using CoolChat.Server.ASPNET.Services;
 using CoolChat.Server.ASPNET;
 using Microsoft.EntityFrameworkCore;
-using System.Net.WebSockets;
-using System.Diagnostics;
 
-internal class Program
+internal static class Program
 {
     private static void Main(string[] args)
     {
@@ -77,7 +75,6 @@ internal class Program
         builder.Services.AddScoped<IChatService, ChatService>();
 
         builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 

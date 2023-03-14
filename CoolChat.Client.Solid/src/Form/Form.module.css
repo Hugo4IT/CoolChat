@@ -17,6 +17,10 @@
         align-items: center;
         gap: 8px;
 
+        label {
+            font-family: var(--display-font);
+        }
+
         .FormTextInput {
             display: flex;
             flex-direction: row;
@@ -132,6 +136,7 @@
     }
 
     .FormTitle {
+        font-family: var(--display-font);
         font-size: 2rem;
         font-weight: 700;
     }

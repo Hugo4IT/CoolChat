@@ -1,4 +1,6 @@
 import hljs from "highlight.js";
+// import "highlight.js/scss/base16/";
+
 import { Component, onMount, Show } from "solid-js";
 
 import styles from "./Message.module.css";
@@ -27,9 +29,10 @@ export const Message: Component<MessageProps> = (props: MessageProps) => {
 
     let content: HTMLDivElement|undefined;
 
-    // onMount(() => {
-    //     content!.querySelectorAll("pre code").forEach(el => hljs.highlightElement(el as HTMLElement));
-    // })
+    onMount(() => {
+        hljs.configure({ })
+        content!.querySelectorAll("pre code").forEach(el => hljs.highlightElement(el as HTMLElement));
+    })
 
     return (
         <div class={styles.MessageContainer}

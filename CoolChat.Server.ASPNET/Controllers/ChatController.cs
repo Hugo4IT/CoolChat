@@ -63,16 +63,16 @@ public class ChatController : ControllerBase
         });
     }
 
-    [HttpGet("MyChats"), Authorize]
-    public IActionResult MyChats()
-    {
-        Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
+    // [HttpGet("MyChats"), Authorize]
+    // public IActionResult MyChats()
+    // {
+    //     Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
         
-        return Ok(new MyChatsResponse
-        {
-            Ids = account.Chats.Select(chat => chat.Id).ToList(),
-        });
-    }
+    //     return Ok(new MyChatsResponse
+    //     {
+    //         Ids = account.Chats.Select(chat => chat.Id).ToList(),
+    //     });
+    // }
 
     // [HttpPost("AddMessage"), Authorize]
     // public async Task<IActionResult> AddMessage([FromQuery] int id)

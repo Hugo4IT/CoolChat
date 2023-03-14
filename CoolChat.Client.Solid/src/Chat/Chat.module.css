@@ -13,6 +13,7 @@
         
         .ScrolledRect {
             /* min-height: min-content; */
+            position: relative;
             
             display: flex;
             flex-direction: column;

@@ -8,7 +8,6 @@ public class Account : BaseEntity
     public virtual Profile Profile { get; set; }
     public virtual ICollection<Message> Messages { get; set; }
     public virtual ICollection<Group> Groups { get; set; }
-    public virtual ICollection<Chat> Chats { get; set; }
     public virtual Settings Settings { get; set; }
     public virtual ICollection<Role> Roles { get; set; }
     public virtual ICollection<Invite> SentInvites { get; set; }
