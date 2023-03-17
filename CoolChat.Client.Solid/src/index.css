@@ -136,7 +136,7 @@
 }  
 
 * {
-    scroll-behavior: smooth;
+    /* scroll-behavior: smooth; */
 }
 
 html, body {
@@ -149,21 +149,23 @@ div#root {
 }
 
 body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-
+    --body-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                 sans-serif;
+    --code-font: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+                 monospace;
     --display-font: 'Lexend', 'Futura', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
                     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
                     sans-serif;
+
+    margin: 0;
+    font-family: var(--body-font);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-        monospace;
+    font-family: var(--code-font);
 }
 
 .emoji-picker {
@@ -227,7 +229,7 @@ pre code {
     padding: 1em;
 }
 
-.ThemeDark {
+.theme-dark {
     pre code {
         color: var(--oc-gray-0);
         background: var(--oc-gray-9);
@@ -340,4 +342,32 @@ pre code {
         background-color: var(--oc-gray-9);
         border-radius: 4px;
     }
+    
+    --color: var(--oc-gray-0);
+    --background-color: var(--oc-gray-9);
+    --input-field-color: var(--oc-gray-2);
+    --input-field-background-color: var(--oc-gray-8);
+    --input-field-icon-container-color: var(--oc-gray-2);
+    --input-field-icon-container-background-color: var(--oc-gray-7);
+    --input-field-placeholder-color: var(--oc-gray-5);
+    --input-field-error-color: var(--oc-red-2);
+    --input-field-error-background-color: var(--oc-red-7);
+    --sidebar-background-color: var(--oc-gray-8);
+    --members-bar-background-color: var(--oc-gray-8);
+    --members-toolbar-background-color: var(--oc-gray-7);
+    --channel-bar-background-color: var(--oc-gray-7);
+    --channel-button-background-color: var(--oc-gray-6);
+    --channel-button-background-color-hovered: var(--oc-gray-5);
+    --message-background-color: var(--oc-gray-8);
+    --message-author-color: var(--oc-gray-5);
+    --message-date-color: var(--oc-gray-6);
+    --button-background-color: var(--oc-gray-7);
+    --button-color: var(--oc-gray-2);
+    --button-background-color-hovered: var(--oc-gray-6);
+    --button-color-hovered: var(--oc-gray-0);
+    --button-background-color-pressed: var(--oc-gray-8);
+    --button-color-pressed: var(--oc-gray-3);
+    --tooltip-background-color: var(--oc-gray-7);
+    --link-color: var(--oc-blue-4);
+    --link-color-visited: var(--oc-blue-4);
 }

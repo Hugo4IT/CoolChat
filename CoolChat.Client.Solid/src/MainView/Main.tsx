@@ -1,4 +1,4 @@
-import { Component, createEffect, createResource, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { batch, Component, createEffect, createResource, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 
 import styles from "./Main.module.css";
 import formStyles from "../Form/Form.module.css";
@@ -17,6 +17,7 @@ import { Form } from "../Form/Form";
 import { FormTitle } from "../Form/FormTitle";
 import { FormButtons } from "../Form/FormButtons";
 import { FormButton } from "../Form/FormButton";
+import { NotificationsManager } from "../NotificationsManager";
 
 interface MainProps {
     logoutCallback: () => void;
@@ -79,10 +80,12 @@ export const Main: Component<MainProps> = (props: MainProps) => {
         if (selectedGroup() == i)
             return;
         
-        setLastSelectedGroup(selectedGroup());
-        setSelectedGroup(i);
-
-        setLoading("group");
+        batch(() => {
+            setLastSelectedGroup(selectedGroup());
+            setSelectedGroup(i);
+    
+            setLoading("group");
+        });
     };
 
     const createGroupFunction = () => {
@@ -99,7 +102,16 @@ export const Main: Component<MainProps> = (props: MainProps) => {
     const cc = new ChatConnectionsManager();
 
     cc.onMessageReceived.push(async (id: number, message: MessageModel) => {
-        
+        // Check if the user has this chat open
+        if (selectedGroup() == undefined || !groups()![selectedGroup()!].channels.map(c => c.chatId).includes(id)) {
+            const el = document.createElement("div");
+            el.innerHTML = message.content;
+
+            const body = el.innerText;
+            const kind = body.includes(`@${localStorage.getItem("username")!}`) ? "ping" : "message";
+
+            NotificationsManager.notify(kind, message.author, body.substring(0, Math.min(300, body.length)));
+        }
     });
 
     cc.onGroupInviteReceived.push(async (invite: InviteDto) => {
@@ -117,14 +129,29 @@ export const Main: Component<MainProps> = (props: MainProps) => {
         mutateGroups([...groups()!, group]);
     });
 
-    onMount(cc.start);
+    onMount(async () => {
+        cc.start();
+
+        await NotificationsManager.launchServiceWorker();
+        NotificationsManager.notify("info", "Testing", "you'll get a few test notifications in a bit");
+
+        setTimeout(async () => {
+            await NotificationsManager.notify("ping", "Ping", "Account1 pinged you!");
+            await NotificationsManager.notify("message", "Account1", "This is a cool message that you definitely received");
+            await NotificationsManager.notify("info", "Info", "I ate peanutbutter today");
+            await NotificationsManager.notify("success", "Success", `Logged in as ${localStorage.getItem("username")!}`);
+            await NotificationsManager.notify("warning", "Warning", "Area fifty-juan seems to be leaking aliens");
+            await NotificationsManager.notify("error", "Error", "Ya dumb");
+        }, 2000);
+
+    });
     onCleanup(cc.stop);
 
     const groupAnimationShowOld = () => loading() == "group" && lastSelectedGroup() != undefined;
     
     return (
         <Switch>
-            <Match when={view() == "main"}>
+            <Match when={view() == "main" && !groups.loading}>
                 <div class={styles.Main}
                     classList={{
                         [styles.Out]: ["createGroup", "logout"].includes(loading()),

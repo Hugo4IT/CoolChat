@@ -73,6 +73,7 @@ internal static class Program
         builder.Services.AddScoped<IGroupService, GroupService>();
         builder.Services.AddScoped<IResourceService, ResourceService>();
         builder.Services.AddScoped<IChatService, ChatService>();
+        builder.Services.AddSingleton<IWebPushService, WebPushService>();
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
@@ -82,7 +83,8 @@ internal static class Program
         {
             options.AddPolicy(name: "allowApi", policy =>
             {
-                policy.WithOrigins("http://localhost:3000")
+                policy.WithOrigins("http://localhost:3000",
+                                   "http://10.10.1.28:3000")
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();
@@ -91,6 +93,22 @@ internal static class Program
 
         builder.Services.AddSignalR();
 
+        builder.Services.AddExceptionHandler(options =>
+            options.ExceptionHandler = async (HttpContext context) =>
+            {
+                Console.WriteLine("An error has occurred");
+
+                // ILogger logger = app.Services.GetRequiredService<ILogger>();
+
+                byte[] buffer = new byte[(int)context.Request.ContentLength!];
+                await context.Request.Body.ReadExactlyAsync(buffer, 0, (int)context.Request.ContentLength!);
+
+                string error = Encoding.UTF8.GetString(buffer);
+                // logger.LogError(error);
+                Console.WriteLine(error);
+            }
+        );
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -98,10 +116,12 @@ internal static class Program
         {
             app.UseSwagger();
             app.UseSwaggerUI();
+
+            app.UseExceptionHandler();
         }
 
-        // app.UseHttpsRedirection();
         app.UseCors("allowApi");
+        // app.UseHttpsRedirection();
 
         app.UseAuthentication();
         app.UseAuthorization();

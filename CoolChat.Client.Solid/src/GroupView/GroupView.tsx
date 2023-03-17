@@ -1,4 +1,4 @@
-import { Component, createSignal, For, Match, Switch } from "solid-js";
+import { Component, createSignal, For, Match, onCleanup, onMount, Switch } from "solid-js";
 import { Chat } from "../Chat/Chat";
 
 import styles from "./GroupView.module.css";
@@ -10,6 +10,7 @@ import { FormTextInput } from "../Form/FormTextInput";
 import { Form } from "../Form/Form";
 import { FormButtons } from "../Form/FormButtons";
 import { FormButton } from "../Form/FormButton";
+import { MessageModel } from "../interfaces/MessageModel";
 
 declare type OverlayId = "nothing"|"inviteUser";
 
@@ -33,6 +34,8 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
     const [invitePopupError, setInvitePopupError] = createSignal("");
     const [invitePopupHasError, setInvitePopupHasError] = createSignal(false);
 
+    let invitePopupInputRef: HTMLInputElement|undefined;
+
     const trySetOverlay = (value: OverlayId) => {
         if (overlay() == "nothing" && loading() == "nothing") {
             setOverlay(value);
@@ -48,8 +51,28 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
         setInvitePopupHasError(!success);
         setInvitePopupError(error);
 
+        if (success)
+            invitePopupInputRef!.value = "";
+
         setLoading("nothing");
     };
+
+    const onMessageReceived = (id: number, message: MessageModel) => {
+        if (!props.group.channels.map(c => c.chatId).includes(id))
+            return;
+        
+        const ping = message.content.includes(`@${localStorage.getItem("username")}`)
+
+        
+    };
+
+    onMount(() => {
+        props.cc.onMessageReceived.push(onMessageReceived);
+    });
+
+    onCleanup(() => {
+        props.cc.onMessageReceived.splice(props.cc.onMessageReceived.indexOf(onMessageReceived));
+    });
 
     return (
         <div class={styles.Group}>
@@ -123,9 +146,10 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
                                    title="Invite User:"
                                    valueCallback={setInvitePopupValue}
                                    error={invitePopupHasError() ? invitePopupError() : undefined}
-                                   onSubmit={inviteFunction}/>
+                                   onSubmit={inviteFunction}
+                                   ref={ref => invitePopupInputRef = ref}/>
                     <FormButtons>
-                        <FormButton kind="secondary" loading={false} onClick={() => trySetOverlay("nothing")}>Cancel</FormButton>
+                        <FormButton kind="secondary" loading={false} onClick={() => setOverlay("nothing")}>Cancel</FormButton>
                         <FormButton kind="primary" loading={loading() == "invite"} onClick={inviteFunction}>Invite</FormButton>
                     </FormButtons>
                 </Form>

@@ -12,6 +12,7 @@ public class Account : BaseEntity
     public virtual ICollection<Role> Roles { get; set; }
     public virtual ICollection<Invite> SentInvites { get; set; }
     public virtual ICollection<Invite> ReceivedInvites { get; set; }
+    public virtual ICollection<WebPushSubscription> WebPushSubscriptions { get; set; } // For desktop notifications
 
     // For session handling
     public string? RefreshToken { get; set; }

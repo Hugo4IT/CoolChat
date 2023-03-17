@@ -98,8 +98,8 @@ export async function login(username: string, password: string): Promise<LoginRe
     await fetch(`${API_ROOT}/api/Auth/Login`, {
         method: "post",
         headers: {
+            "Access-Control-Allow-Origin": "*",
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
         },
         body: JSON.stringify({
             "username": username,
@@ -130,7 +130,8 @@ export function logout() {
 
 export async function getToken() {
     const token = localStorage.getItem("jwt");
-    if (token == null)
+
+    if (!token)
         return undefined;
     
     if (await isValid(token))

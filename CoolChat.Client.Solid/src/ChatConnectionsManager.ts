@@ -22,7 +22,7 @@ export class ChatConnectionsManager {
 
     public constructor() {
         this.connection = new HubConnectionBuilder()
-            .withUrl("http://localhost:5010/signalr/chathub", { accessTokenFactory: () => localStorage.getItem("jwt")! })
+            .withUrl(`${API_ROOT}/signalr/chathub`, { accessTokenFactory: () => localStorage.getItem("jwt")! })
             .build();
         
         this.connection.on("ReceiveMessage", (id: number, author: string, content: string, date: Date) => {
@@ -37,6 +37,10 @@ export class ChatConnectionsManager {
         this.connection.on("GroupJoined", (group: GroupDto) => {
             for (const callback of this.onGroupJoined)
                 callback(group);
+        });
+
+        window.addEventListener("close", () => {
+            this.connection.stop();
         });
 
         this.chatCache = new Map();

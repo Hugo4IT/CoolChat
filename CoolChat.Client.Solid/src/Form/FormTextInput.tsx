@@ -1,5 +1,5 @@
 import { IconTypes } from "solid-icons";
-import { Component, createEffect, JSX, Ref } from "solid-js";
+import { Component, createEffect, JSX, onMount, Ref } from "solid-js";
 
 import styles from "./Form.module.css";
 
@@ -12,6 +12,7 @@ interface FormTextInputProps {
     kind?: "text"|"password";
     name: string;
     title: string;
+    ref?: (ref: HTMLInputElement) => void;
 }
 
 export const FormTextInput: Component<FormTextInputProps> = (props: FormTextInputProps) => {
@@ -21,6 +22,13 @@ export const FormTextInput: Component<FormTextInputProps> = (props: FormTextInpu
     const kind = props.kind ?? "text";
 
     let inputRef: HTMLInputElement|undefined;
+
+    // onMount(() => {
+    //     window.requestAnimationFrame(() => {
+    //         if (props.ref != undefined)
+    //             props.ref.value = inputRef;
+    //     });
+    // })
 
     const onInput = () => {
         props.valueCallback(inputRef!.value);
@@ -44,10 +52,10 @@ export const FormTextInput: Component<FormTextInputProps> = (props: FormTextInpu
                 <input type={kind}
                        name={props.name}
                        id={props.name}
-                       ref={inputRef}
+                       ref={ref => { inputRef = ref; (props.ref ?? (() => {}))(ref); }}
                        onInput={onInput}
                        placeholder={props.placeholder}
-                       onKeyDown={onKeyDown} />
+                       onKeyDown={onKeyDown}/>
             </div>
             <span class={styles.FormTextInputError}
                     classList={{

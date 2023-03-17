@@ -17,6 +17,7 @@ public class DataContext : DbContext
     public DbSet<Role> Roles { get; set; } = null!;
     public DbSet<RolePermissions> RolePermissions { get; set; } = null!;
     public DbSet<Invite> Invites { get; set; } = null!;
+    public DbSet<WebPushSubscription> WebPushSubscriptions { get; set; } = null!;
 
     public DataContext() {}
 
@@ -30,6 +31,7 @@ public class DataContext : DbContext
         builder.Entity<Account>().HasMany(a => a.Roles).WithMany(r => r.Accounts);
         builder.Entity<Account>().HasMany(a => a.SentInvites).WithOne(i => i.From);
         builder.Entity<Account>().HasMany(a => a.ReceivedInvites).WithOne(i => i.To);
+        builder.Entity<Account>().HasMany(a => a.WebPushSubscriptions);
         
         builder.Entity<Group>().HasMany(g => g.Channels);
         builder.Entity<Group>().HasMany(g => g.Members).WithMany(a => a.Groups);

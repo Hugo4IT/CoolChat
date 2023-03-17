@@ -1,7 +1,7 @@
 import { createStore } from "solid-js/store";
 import { EmojiPicker } from "solid-emoji-picker";
 import { FaSolidCirclePlus, FaSolidFaceSmile } from "solid-icons/fa";
-import { Accessor, Component, createEffect, createSignal, For, onMount, Show, Suspense } from "solid-js";
+import { Accessor, Component, createEffect, createSignal, For, onCleanup, onMount, Show, Suspense } from "solid-js";
 import { ChatConnectionsManager } from "../ChatConnectionsManager";
 import { MessageModel } from "../interfaces/MessageModel";
 import { Message } from "../Message/Message";
@@ -28,6 +28,9 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
     // Scroll to bottom of chat on open
     createEffect(async () => {
         const id = props.id();
+
+        setMessages([]);
+
         const m = await props.cc.getMessages(id);
 
         if (m == messages)
@@ -35,9 +38,9 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
         
         setMessages(m);
 
-        scrolledRectRef!.style.scrollBehavior = "initial";
+        // scrolledRectRef!.style.scrollBehavior = "initial";
         scrolledRectRef!.scrollTop = 999999;
-        scrolledRectRef!.style.scrollBehavior = "smooth";
+        // scrolledRectRef!.style.scrollBehavior = "smooth";
     });
     
     const pushMessage = async (id: number, message: MessageModel) => {
@@ -81,6 +84,10 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
             scrolledRectRef!.scrollTop = 999999;
         });
     });
+
+    onCleanup(() => {
+        props.cc.onMessageReceived.splice(props.cc.onMessageReceived.indexOf(pushMessage));
+    })
 
     const chatInput = () => {
         const value = chatInputRef!.value;

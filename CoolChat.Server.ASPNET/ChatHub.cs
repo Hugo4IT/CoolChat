@@ -4,6 +4,7 @@ using CoolChat.Server.ASPNET.Controllers;
 using Markdig;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
 
 using MD = Markdig.Markdown;
 
@@ -14,15 +15,17 @@ public class ChatHub : Hub
 {
     private readonly static ConnectionMapping<string> _connections = new();
 
+    private readonly IWebPushService _webPushService;
     private readonly IAccountService _accountService;
     private readonly IGroupService _groupService;
     private readonly IChatService _chatService;
     private readonly DataContext _dataContext;
     private readonly ILogger<ChatHub> _logger;
 
-    public ChatHub(IAccountService accountService, IGroupService groupService, IChatService chatService, DataContext dataContext, ILogger<ChatHub> logger)
+    public ChatHub(IAccountService accountService, IWebPushService webPushService, IGroupService groupService, IChatService chatService, DataContext dataContext, ILogger<ChatHub> logger)
     {
         _accountService = accountService;
+        _webPushService = webPushService;
         _groupService = groupService;
         _chatService = chatService;
         _dataContext = dataContext;
@@ -54,6 +57,9 @@ public class ChatHub : Hub
         if (chat == null)
             return;
 
+        if (string.IsNullOrWhiteSpace(content.Trim()))
+            return;
+
         MarkdownPipeline pipeline = new MarkdownPipelineBuilder()
             .DisableHtml()
             .UseSmartyPants()
@@ -67,15 +73,13 @@ public class ChatHub : Hub
             .UseGridTables()
             .Build();
 
-        content = MD.ToHtml(content, pipeline).Trim();
-
-        if (content.Length == 0)
-            return;
+        string html = MD.ToHtml(content, pipeline);
+        string plain = MD.ToPlainText(content, pipeline);
 
         Message message = new Message
         {
             Author = _accountService.GetByUsername(Context.User!.Identity!.Name!)!,
-            Content = content,
+            Content = html,
             Date = DateTime.Now,
         };
 
@@ -83,6 +87,20 @@ public class ChatHub : Hub
 
         await Clients.Group($"c_{chat.Id}")
                      .SendAsync("ReceiveMessage", chatId, message.Author.Name, message.Content, message.Date);
+
+        await _webPushService.SendTo(
+            chat.Members.Where(m => m.Id != message.Author.Id && m.WebPushSubscriptions.Count > 0 && _connections.GetConnections(m.Name).Count() == 0).ToList(),
+            JsonConvert.SerializeObject(new
+            {
+                type = "message",
+                data = new
+                {
+                    author = message.Author.Name,
+                    content = plain.Substring(0, Math.Min(300, plain.Length)).Trim(),
+                    date = message.Date,
+                },
+            }, new JsonSerializerSettings { Error = (currentObject, context) => _logger.LogError(context.ErrorContext.Error.Message) })
+        );
     }
 
     public struct CreateInviteResponse

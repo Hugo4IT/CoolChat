@@ -19,6 +19,26 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
+    "itvitae": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "http://10.10.1.28:5010",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "itvitae-s": {
+        "commandName": "Project",
+        "dotnetRunMessages": true,
+        "launchBrowser": true,
+        "launchUrl": "swagger",
+        "applicationUrl": "https://10.10.1.28:7199;http://10.10.1.28:5010",
+        "environmentVariables": {
+          "ASPNETCORE_ENVIRONMENT": "Development"
+        }
+    },
     "https": {
       "commandName": "Project",
       "dotnetRunMessages": true,

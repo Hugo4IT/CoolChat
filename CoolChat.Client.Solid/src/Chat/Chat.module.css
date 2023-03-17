@@ -1,3 +1,8 @@
+@keyframes appear {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
 .Chat {
     display: grid;
     grid-template-rows: 1fr min-content;
@@ -12,6 +17,8 @@
         overflow-y: scroll;
         
         .ScrolledRect {
+            animation: appear 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+
             /* min-height: min-content; */
             position: relative;
             

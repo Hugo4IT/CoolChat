@@ -3,6 +3,7 @@ using System;
 using CoolChat.Server.ASPNET;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoolChat.Server.ASPNET.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230316143539_WebPushEndpoints")]
+    partial class WebPushEndpoints
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -86,6 +89,10 @@ namespace CoolChat.Server.ASPNET.Migrations
 
                     b.Property<int>("SettingsId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("WebPushEndpoints")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -345,34 +352,6 @@ namespace CoolChat.Server.ASPNET.Migrations
                     b.ToTable("AccountSettings");
                 });
 
-            modelBuilder.Entity("CoolChat.Domain.Models.WebPushSubscription", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("AccountId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Endpoint")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Key_auth")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Key_p256dh")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
-
-                    b.ToTable("WebPushSubscriptions");
-                });
-
             modelBuilder.Entity("AccountGroup", b =>
                 {
                     b.HasOne("CoolChat.Domain.Models.Group", null)
@@ -540,13 +519,6 @@ namespace CoolChat.Server.ASPNET.Migrations
                         .HasForeignKey("GroupSettingsId");
                 });
 
-            modelBuilder.Entity("CoolChat.Domain.Models.WebPushSubscription", b =>
-                {
-                    b.HasOne("CoolChat.Domain.Models.Account", null)
-                        .WithMany("WebPushSubscriptions")
-                        .HasForeignKey("AccountId");
-                });
-
             modelBuilder.Entity("CoolChat.Domain.Models.Account", b =>
                 {
                     b.Navigation("Messages");
@@ -554,8 +526,6 @@ namespace CoolChat.Server.ASPNET.Migrations
                     b.Navigation("ReceivedInvites");
 
                     b.Navigation("SentInvites");
-
-                    b.Navigation("WebPushSubscriptions");
                 });
 
             modelBuilder.Entity("CoolChat.Domain.Models.Channel", b =>

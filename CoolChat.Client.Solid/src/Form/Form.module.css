@@ -17,11 +17,15 @@
         align-items: center;
         gap: 8px;
 
+        width: 300px;
+
         label {
             font-family: var(--display-font);
         }
 
         .FormTextInput {
+            width: 100%;
+
             display: flex;
             flex-direction: row;
     
@@ -58,7 +62,7 @@
                     color: var(--input-field-placeholder-color-rgb);
                 }
 
-                width: calc(20ch + 20px);
+                width: 100%;
 
                 padding: 8px 16px 8px 8px;
                 border: none;
@@ -108,6 +112,51 @@
                 height: 0px;
                 opacity: 0;
                 margin-top: -8px;
+            }
+        }
+
+        .FormCheckBoxContainer {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-grow: 1;
+
+            user-select: none;
+
+            .FormFakeCheckBox {
+                background: linear-gradient(to top right, var(--accent-background-7), var(--accent-background-5));
+                /* background: var(--button-background-color-pressed); */
+                border: solid 4px var(--button-background-color);
+                box-shadow: inset 0px 0px 0px 12px var(--button-background-color-pressed);
+
+                width: 32px;
+                height: 32px;
+
+                border-radius: 8px;
+
+                box-sizing: border-box;
+
+                transition: box-shadow 0.3s cubic-bezier(0.19, 1, 0.22, 1),
+                            border 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+
+                &:hover {
+                    /* border: solid 4px var(--button-background-color-hovered); */
+                    cursor: pointer;
+                }
+            }
+
+            &.Checked {
+                .FormFakeCheckBox {
+                    box-shadow: inset 0px 0px 0px 12px transparent;
+                }
+            }
+
+            .FormCheckBox {
+                visibility: hidden;
+                position: absolute;
+                width: 0;
+                height: 0;
+                pointer-events: none;
             }
         }
 

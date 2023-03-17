@@ -40,6 +40,7 @@ export const Message: Component<MessageProps> = (props: MessageProps) => {
                 [styles.Sent]: props.sent,
                 [styles.AuthorHidden]: hideAuthor,
                 [styles.DateHidden]: hideDate,
+                [styles.Ping]: props.content.includes(`@${localStorage.getItem("username")}`),
             }}>
             <Show when={!hideAuthor}>
                 <span class={styles.Author}>{props.author}</span>

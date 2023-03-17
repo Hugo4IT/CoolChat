@@ -6,30 +6,20 @@
         <UserSecretsId>e9514d03-a1e3-4a99-a47a-6fa87cd065f6</UserSecretsId>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="BCrypt.Net-Next"
-                          Version="4.0.3" />
-        <PackageReference Include="Markdig"
-                          Version="0.31.0" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR"
-                          Version="1.1.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"
-                          Version="7.0.3" />
-        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore"
-                          Version="7.0.3" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi"
-                          Version="7.0.3" />
-        <PackageReference Include="SixLabors.ImageSharp"
-                          Version="3.0.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore"
-                          Version="6.5.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore"
-                          Version="7.0.3" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design"
-                          Version="7.0.3" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite"
-                          Version="7.0.3" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies"
-                          Version="7.0.3" />
+        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+        <PackageReference Include="Markdig" Version="0.31.0" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.3" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.0.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="7.0.3" />
+        <PackageReference Include="WebPush" Version="1.0.12" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\CoolChat.Business\CoolChat.Business.csproj" />

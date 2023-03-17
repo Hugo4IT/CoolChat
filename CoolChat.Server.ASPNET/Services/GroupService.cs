@@ -24,6 +24,9 @@ public class GroupService : IGroupService
         }
 
         group.Members.Add(account);
+
+        UpdateGroupChatMembers(group);
+
         _dataContext.SaveChanges();
 
         _logger.LogInformation($"\"{account.Name.ToSafe()}\" joined \"{group.Name.ToSafe()}\"");
@@ -41,7 +44,9 @@ public class GroupService : IGroupService
 
             group.Members.Add(account);
         }
-        
+
+        UpdateGroupChatMembers(group);
+
         _dataContext.SaveChanges();
 
         // [Debug]: ["Account1", "Account2", "Account3"] joined "Group"
@@ -87,4 +92,10 @@ public class GroupService : IGroupService
 
     public Group? GetById(int id) =>
         _dataContext.Groups.FirstOrDefault(g => g.Id == id);
+    
+    private void UpdateGroupChatMembers(Group group)
+    {
+        foreach (Chat chat in group.Channels.Select(c => c.Chat))
+            chat.Members = group.Members;
+    }
 }

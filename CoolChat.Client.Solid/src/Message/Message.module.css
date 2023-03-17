@@ -1,3 +1,17 @@
+@keyframes appear-r {
+    0% { transform: translate(-100px, 0); opacity: 0 }
+    100% { opacity: 1 }
+}
+
+@keyframes appear-s {
+    0% { transform: translate(100px, 0); opacity: 0 }
+    100% { opacity: 1 }
+}
+
+@keyframes move {
+    0% { transform: translateY(var(--last-message-size)) }
+}
+
 .MessageContainer {
     max-width: 100%;
     box-sizing: border-box;
@@ -6,6 +20,8 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+
+    overflow-x: hidden;
 
     &.AuthorHidden {
         margin-top: 2px;
@@ -109,6 +125,14 @@
         font-size: .8rem;
     }
 
+    &.Ping {
+        .Message {
+            background: linear-gradient(to top right,
+                                        var(--accent-background-9),
+                                        var(--accent-background-7));
+        }
+    }
+
     &.Sent {
         align-self: flex-end;
         align-items: flex-end;
@@ -118,4 +142,16 @@
             border-bottom-right-radius: 0;
         }
     }
+
+    /* &:last-child {
+        .Message {
+            animation: appear-r 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        &.Sent {
+            .Message {
+                animation: appear-s 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            }
+        }
+    } */
 }
