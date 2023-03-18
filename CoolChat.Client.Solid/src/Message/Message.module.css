@@ -23,21 +23,32 @@
 
     overflow-x: hidden;
 
-    &.AuthorHidden {
+    margin-top: 8px;
+    margin-bottom: 2px;
+
+    &.Grouped {
         margin-top: 2px;
     }
 
-    &.DateHidden {
-        margin-bottom: 2px;
+    .MessageHeader {
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+        
+        .Author {
+            color: var(--message-author-color);
+            
+            font-family: var(--display-font);
+            font-weight: 700;
+            font-size: .8rem;
+        }
+        
+        .Date {
+            color: var(--message-date-color);
+            font-size: .7rem;
+        }
     }
-    
-    .Author {
-        color: var(--message-author-color);
 
-        font-family: var(--display-font);
-        font-weight: 700;
-        font-size: .8rem;
-    }
 
     .Message {
         background-color: var(--message-background-color);
@@ -120,11 +131,6 @@
         img:last-child { margin-bottom: 0 }
     }
     
-    .Date {
-        color: var(--message-date-color);
-        font-size: .8rem;
-    }
-
     &.Ping {
         .Message {
             background: linear-gradient(to top right,
@@ -140,6 +146,10 @@
         .Message {
             border-bottom-left-radius: 16px;
             border-bottom-right-radius: 0;
+        }
+
+        .MessageHeader {
+            flex-direction: row-reverse;
         }
     }
 

@@ -1,32 +1,41 @@
-import { Component, createEffect, createSignal, Match, onMount, Switch } from 'solid-js';
+import { Component, createEffect, createSignal, Match, on, onMount, Switch } from 'solid-js';
 
 import styles from './App.module.css';
-import { getToken } from './JwtHelper';
 import { LoginForm } from './LoginForm/LoginForm';
+import { AuthenticationManager } from './AuthenticationManager';
 import { Main } from './MainView/Main';
 import { NotificationsManager } from './NotificationsManager';
+import { FaSolidCircleNotch } from 'solid-icons/fa';
+import { RTManager } from './RTManager';
 
 const App: Component = () => {
-    const [loggedIn, setLoggedIn] = createSignal(false);
     const [view, setView] = createSignal("login-attempt");
-
     const [accent, setAccent] = createSignal("blue");
 
-    createEffect(() => {
-        if (loggedIn()) {
-            setTimeout(() => setView("main"), 300);
-        } else {
-            setTimeout(() => setView("login"), 300);
-        }
-    });
-
+    const authenticationManager = new AuthenticationManager();
     const notificationsManager = new NotificationsManager();
-
+    const rtManager = new RTManager();
+    
     onMount(async () => {
-        if (await getToken() != undefined)
-            setLoggedIn(true);
-        else
-            setView("login")
+        await authenticationManager.refresh();
+
+        if (!authenticationManager.loggedIn()) {
+            setView("login");
+        } else {
+            await rtManager.load();
+            setView("main");
+        }
+
+        // Change view with delay for animation
+        on(authenticationManager.loggedIn, async loggedIn => {
+            if (loggedIn) {
+                await rtManager.load();
+                setTimeout(() => setView("main"), 300);
+            } else {
+                await rtManager.unload();
+                setTimeout(() => setView("login"), 300);
+            }
+        });
     });
 
     createEffect(() => {
@@ -40,13 +49,13 @@ const App: Component = () => {
         <div class={styles.App}>
             <Switch>
                 <Match when={view() == "login-attempt"}>
-
+                    <FaSolidCircleNotch size={24} class={styles.LoadingSpinner} />
                 </Match>
                 <Match when={view() == "login"}>
-                    <LoginForm loginCallback={setLoggedIn} />
+                    <LoginForm />
                 </Match>
                 <Match when={view() == "main"}>
-                    <Main logoutCallback={() => setLoggedIn(false)} />
+                    <Main />
                 </Match>
             </Switch>
             {notificationsManager.view({})}

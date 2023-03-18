@@ -21,18 +21,20 @@ public class RefreshParameters
 public class TokenController : ControllerBase
 {
     private readonly DataContext _dataContext;
+    private readonly IAccountService _accountService;
     private readonly ITokenService _tokenService;
 
-    public TokenController(DataContext dataContext, ITokenService tokenService)
+    public TokenController(DataContext dataContext, IAccountService accountService, ITokenService tokenService)
     {
         _dataContext = dataContext;
+        _accountService = accountService;
         _tokenService = tokenService;
     }
 
     [HttpPost("Refresh")]
     public IActionResult Refresh([FromBody] RefreshParameters parameters)
     {
-        if (parameters is null || parameters.AccessToken is null || parameters.RefreshToken is null)
+        if (parameters == null || parameters.AccessToken == null || parameters.RefreshToken == null)
             return BadRequest("Invalid client request");
         
         string accessToken = parameters.AccessToken;
@@ -44,9 +46,9 @@ public class TokenController : ControllerBase
         if (username is null)
             return BadRequest("Invalid client request");
 
-        Account? account = _dataContext.Accounts.SingleOrDefault(user => user.Name == username);
+        Account? account = _accountService.GetByUsername(username);
 
-        if (account is null || account.RefreshToken != refreshToken || account.RefreshTokenExpiryTime <= DateTime.Now)
+        if (account == null || account.RefreshToken != refreshToken || DateTime.Now <= account.RefreshTokenExpiryTime)
             return BadRequest("Invalid client request");
         
         string newAccessToken = _tokenService.GenerateAccessToken(principal.Claims);
@@ -61,24 +63,5 @@ public class TokenController : ControllerBase
             Token = newAccessToken,
             RefreshToken = newRefreshToken,
         });
-    }
-
-    [HttpPost("Revoke"), Authorize]
-    public IActionResult Revoke()
-    {
-        string? username = User.Identity?.Name;
-
-        if (username is null)
-            return BadRequest("Invalid client request");
-
-        Account? account = _dataContext.Accounts.FirstOrDefault(account => account.Name == username);
-
-        if (account is null)
-            return BadRequest("User not found");
-        
-        account.RefreshToken = null;
-        _dataContext.SaveChanges();
-
-        return NoContent();
     }
 }

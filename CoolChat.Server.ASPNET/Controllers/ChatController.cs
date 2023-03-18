@@ -51,16 +51,16 @@ public class ChatController : ControllerBase
         if (chat == null)
             return BadRequest("Invalid chat id");
         
-        return Ok(new GetMessagesResponse
-        {
-            Items = _chatService.GetMessages(chat, start, count)
-                                .Select(message => new GetMessagesResponse.Item
-            {
-                Author = message.Author.Name,
-                Content = message.Content,
-                Date = message.Date,
-            }).ToList(),
-        });
+        return Ok(
+            _chatService
+                .GetMessages(chat, start, count)
+                .Select(message => new GetMessagesResponse.Item
+                {
+                    Author = message.Author.Name,
+                    Content = message.Content,
+                    Date = message.Date,
+                })
+        );
     }
 
     // [HttpGet("MyChats"), Authorize]

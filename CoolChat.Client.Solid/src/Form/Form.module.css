@@ -79,8 +79,6 @@
             }
 
             .FileInputLabel {
-                width: calc(20ch + 20px);
-
                 &.Unset {
                     color: var(--input-field-placeholder-color);
                 }

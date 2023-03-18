@@ -1,7 +1,5 @@
+import { MessageDto as MessageDto } from "./MessageDto";
+
 export interface GetMessagesResponse {
-    items: {
-        author: string;
-        content: string;
-        date: Date;
-    }[];
+    items: MessageDto[];
 }

@@ -2,7 +2,6 @@ import { Component, createSignal } from "solid-js";
 import { FaSolidKey, FaSolidUser } from 'solid-icons/fa';
 
 import styles from './LoginForm.module.css';
-import { login, register } from "../JwtHelper";
 import { Form } from "../Form/Form";
 import { FormTextInput } from "../Form/FormTextInput";
 import { FormButtons } from "../Form/FormButtons";
@@ -10,9 +9,10 @@ import { FormButton } from "../Form/FormButton";
 import { FormTitle } from "../Form/FormTitle";
 import { FormCheckBox } from "../Form/FormCheckbox";
 import { IDBManager } from "../IDBManager";
+import { AuthenticationFailed, AuthenticationManager } from "../AuthenticationManager";
 
 interface LoginFormProps {
-    loginCallback: (loggedIn: boolean) => void;
+
 }
 
 export const LoginForm: Component<LoginFormProps> = (props: LoginFormProps) => {
@@ -22,6 +22,8 @@ export const LoginForm: Component<LoginFormProps> = (props: LoginFormProps) => {
     const [passwordError, setPasswordError] = createSignal<string|undefined>();
     const [loading, setLoading] = createSignal("nothing");
 
+    const authenticationManager = AuthenticationManager.get();
+
     let passwordRef: HTMLInputElement|undefined;
 
     const loginFunction = async () => {
@@ -30,17 +32,17 @@ export const LoginForm: Component<LoginFormProps> = (props: LoginFormProps) => {
 
         setLoading("login");
 
-        let result = await login(username(), password());
+        let result = await authenticationManager.login(username(), password());
 
         setLoading("nothing");
 
-        if (result.success) {
-            props.loginCallback(true);
+        if (result.success()) {
             setLoading("main");
         } else {
-            props.loginCallback(false);
-            setUsernameError(result.usernameError ?? undefined);
-            setPasswordError(result.passwordError ?? undefined);
+            const { errors } = result as AuthenticationFailed;
+
+            setUsernameError(errors.username);
+            setPasswordError(errors.password);
         }
     };
     
@@ -50,17 +52,17 @@ export const LoginForm: Component<LoginFormProps> = (props: LoginFormProps) => {
 
         setLoading("register");
 
-        let result = await register(username(), password());
+        let result = await authenticationManager.register(username(), password());
 
         setLoading("nothing");
 
-        if (result.success) {
-            props.loginCallback(true);
+        if (result.success()) {
             setLoading("main");
         } else {
-            props.loginCallback(false);
-            setUsernameError(result.usernameError ?? undefined);
-            setPasswordError(result.passwordError ?? undefined);
+            const { errors } = result as AuthenticationFailed;
+
+            setUsernameError(errors.username);
+            setPasswordError(errors.password);
         }
     };
 
@@ -83,6 +85,10 @@ export const LoginForm: Component<LoginFormProps> = (props: LoginFormProps) => {
                            error={passwordError()}
                            ref={ref => passwordRef = ref}
                            onSubmit={loginFunction}/>
+            <FormCheckBox valueCallback={authenticationManager.setPersistToken}
+                          default={true}
+                          name="remember-me"
+                          text="Remember Me" />
             <FormButtons>
                 <FormButton kind="secondary" loading={loading() == "register"} onClick={registerFunction}>Register</FormButton>
                 <FormButton kind="primary" loading={loading() == "login"} onClick={loginFunction}>Log In</FormButton>

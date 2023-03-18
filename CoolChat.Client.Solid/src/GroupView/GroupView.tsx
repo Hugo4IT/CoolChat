@@ -3,14 +3,14 @@ import { Chat } from "../Chat/Chat";
 
 import styles from "./GroupView.module.css";
 import { FaSolidFlag, FaSolidGear, FaSolidHashtag, FaSolidPlus, FaSolidRightFromBracket, FaSolidUser, FaSolidUserPlus, FaSolidUsers } from "solid-icons/fa";
-import { ChatConnectionsManager } from "../ChatConnectionsManager";
 import { GroupDto } from "../interfaces/GroupDto";
 import { Overlay } from "../Overlay/Overlay";
 import { FormTextInput } from "../Form/FormTextInput";
 import { Form } from "../Form/Form";
 import { FormButtons } from "../Form/FormButtons";
 import { FormButton } from "../Form/FormButton";
-import { MessageModel } from "../interfaces/MessageModel";
+import { MessageDto } from "../interfaces/MessageDto";
+import { RTManager } from "../RTManager";
 
 declare type OverlayId = "nothing"|"inviteUser";
 
@@ -19,7 +19,6 @@ interface GroupViewProps {
     index: number;
     lastIndex: number|undefined;
     out: boolean;
-    cc: ChatConnectionsManager;
 }
 
 export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
@@ -34,6 +33,8 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
     const [invitePopupError, setInvitePopupError] = createSignal("");
     const [invitePopupHasError, setInvitePopupHasError] = createSignal(false);
 
+    const rt = RTManager.get();
+
     let invitePopupInputRef: HTMLInputElement|undefined;
 
     const trySetOverlay = (value: OverlayId) => {
@@ -46,7 +47,7 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
     const inviteFunction = async () => {
         setLoading("invite");
 
-        const { success, error } = await props.cc.sendInvite(props.group.id, invitePopupValue());
+        const { success, error } = await rt.sendInvite(props.group.id, invitePopupValue());
 
         setInvitePopupHasError(!success);
         setInvitePopupError(error);
@@ -57,7 +58,7 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
         setLoading("nothing");
     };
 
-    const onMessageReceived = (id: number, message: MessageModel) => {
+    const onMessageReceived = (id: number, message: MessageDto) => {
         if (!props.group.channels.map(c => c.chatId).includes(id))
             return;
         
@@ -67,11 +68,11 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
     };
 
     onMount(() => {
-        props.cc.onMessageReceived.push(onMessageReceived);
+        rt.onMessageReceived.push(onMessageReceived);
     });
 
     onCleanup(() => {
-        props.cc.onMessageReceived.splice(props.cc.onMessageReceived.indexOf(onMessageReceived));
+        rt.onMessageReceived.splice(rt.onMessageReceived.indexOf(onMessageReceived));
     });
 
     return (
@@ -108,8 +109,7 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
                     [styles.First]: props.lastIndex == undefined,
                     [styles.Flip]: props.lastIndex != undefined && props.lastIndex > props.index,
                  }}>
-                <Chat id={getSelectedChannelChat}
-                      cc={props.cc} />
+                <Chat id={getSelectedChannelChat} />
             </div>
             <div class={styles.MembersBar}>
                 <div class={[styles.MembersBarContents, styles.Animated].join(' ')}

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CoolChat.Domain.Interfaces;
 using CoolChat.Domain.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
@@ -96,6 +97,18 @@ public class AuthController : ControllerBase
             Debug.WriteLine(e.Message, "error");
             return BadRequest("A user with this name already exists");
         }
+    }
+
+    [HttpPost("Logout"), Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
+
+        account.RefreshToken = null;
+
+        await _dataContext.SaveChangesAsync();
+
+        return Ok();
     }
 
     private AuthenticatedResponse StartSession(Account account)

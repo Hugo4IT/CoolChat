@@ -4,12 +4,10 @@ import styles from "./Main.module.css";
 import formStyles from "../Form/Form.module.css";
 import globalStyles from "../GlobalStyles.module.css";
 import { FaSolidCircleNotch, FaSolidPlus, FaSolidRightFromBracket } from "solid-icons/fa";
-import { getToken, logout } from "../JwtHelper";
 import { CreateGroupForm } from "../CreateGroupForm/CreateGroupForm";
 import { API_ROOT } from "../Globals";
 import { GroupView } from "../GroupView/GroupView";
-import { MessageModel } from "../interfaces/MessageModel";
-import { ChatConnectionsManager } from "../ChatConnectionsManager";
+import { MessageDto } from "../interfaces/MessageDto";
 import { GroupDto } from "../interfaces/GroupDto";
 import { InviteDto } from "../interfaces/InviteDto";
 import { Overlay } from "../Overlay/Overlay";
@@ -18,20 +16,11 @@ import { FormTitle } from "../Form/FormTitle";
 import { FormButtons } from "../Form/FormButtons";
 import { FormButton } from "../Form/FormButton";
 import { NotificationsManager } from "../NotificationsManager";
+import { AuthenticationManager } from "../AuthenticationManager";
+import { RTManager } from "../RTManager";
 
 interface MainProps {
-    logoutCallback: () => void;
 }
-
-const fetchGroups = async () =>
-    (await (await fetch(`${API_ROOT}/api/Group/MyGroups`, {
-        headers: { "Authorization": "Bearer " + await getToken() }
-    })).json()) as GroupDto[];
-
-const fetchInvites = async () =>
-    (await (await fetch(`${API_ROOT}/api/Group/MyInvites`, {
-        headers: { "Authorization": "Bearer " + await getToken() }
-    })).json()) as InviteDto[];
 
 export const Main: Component<MainProps> = (props: MainProps) => {
     const [loading, setLoading] = createSignal("nothing");
@@ -41,9 +30,6 @@ export const Main: Component<MainProps> = (props: MainProps) => {
 
     const [invitePopup, setInvitePopup] = createSignal<InviteDto|undefined>(undefined);
     const [showInvitePopup, setShowInvitePopup] = createSignal(false);
-
-    const [groups, { mutate: mutateGroups, refetch: refetchGroups }] = createResource(fetchGroups);
-    const [invites, { mutate: mutateInvites, refetch: refetchInvites }] = createResource(fetchInvites);
 
     createEffect(() => {
         // Animations
@@ -69,8 +55,7 @@ export const Main: Component<MainProps> = (props: MainProps) => {
             return;
         
         setLoading("logout");
-        logout();
-        props.logoutCallback();
+        AuthenticationManager.get().logout();
     };
 
     const openGroupFunction = (i: number) => {
@@ -93,17 +78,15 @@ export const Main: Component<MainProps> = (props: MainProps) => {
     };
 
     const createGroupExit = async (success: boolean, res: GroupDto|null) => {
-        if (success)
-            mutateGroups([...groups()!, res!]);
-        
         setLoading("main");
     };
 
-    const cc = new ChatConnectionsManager();
+    // const cc = new ChatConnectionsManager();
+    const rt = RTManager.get();
 
-    cc.onMessageReceived.push(async (id: number, message: MessageModel) => {
+    rt.onMessageReceived.push(async (id: number, message: MessageDto) => {
         // Check if the user has this chat open
-        if (selectedGroup() == undefined || !groups()![selectedGroup()!].channels.map(c => c.chatId).includes(id)) {
+        if (selectedGroup() == undefined || !rt.groups[selectedGroup()!].channels.map(c => c.chatId).includes(id)) {
             const el = document.createElement("div");
             el.innerHTML = message.content;
 
@@ -114,24 +97,14 @@ export const Main: Component<MainProps> = (props: MainProps) => {
         }
     });
 
-    cc.onGroupInviteReceived.push(async (invite: InviteDto) => {
-        console.log("Recieved invite: ", invite);
-
-        mutateInvites([...invites()!, invite]);
-
+    rt.onGroupInviteReceived.push(async (invite: InviteDto) => {
         if (view() == "main") {
             setInvitePopup(invite);
             setShowInvitePopup(true);
         }
     });
 
-    cc.onGroupJoined.push(async (group: GroupDto) => {
-        mutateGroups([...groups()!, group]);
-    });
-
     onMount(async () => {
-        cc.start();
-
         await NotificationsManager.launchServiceWorker();
         NotificationsManager.notify("info", "Testing", "you'll get a few test notifications in a bit");
 
@@ -143,21 +116,19 @@ export const Main: Component<MainProps> = (props: MainProps) => {
             await NotificationsManager.notify("warning", "Warning", "Area fifty-juan seems to be leaking aliens");
             await NotificationsManager.notify("error", "Error", "Ya dumb");
         }, 2000);
-
     });
-    onCleanup(cc.stop);
 
     const groupAnimationShowOld = () => loading() == "group" && lastSelectedGroup() != undefined;
     
     return (
         <Switch>
-            <Match when={view() == "main" && !groups.loading}>
+            <Match when={view() == "main"}>
                 <div class={styles.Main}
                     classList={{
                         [styles.Out]: ["createGroup", "logout"].includes(loading()),
                     }}>
                     <div class={styles.Sidebar}>
-                        <For each={groups() ?? []}>{(group, i) => (
+                        <For each={rt.groups}>{(group, i) => (
                             <button class={[styles.GroupButton].join(' ')}
                                     onClick={() => openGroupFunction(i())}
                                     classList={{[styles.GroupButtonActive]: selectedGroup() == i()}}
@@ -195,15 +166,14 @@ export const Main: Component<MainProps> = (props: MainProps) => {
                     </div>
                     <div class={styles.Content}>
                         <Switch>
-                            <Match when={groups() == undefined || groups()!.length == 0}>
+                            <Match when={rt.groups.length == 0}>
 
                             </Match>
                             <Match when={selectedGroup() != undefined}>
-                                <GroupView group={groups()![groupAnimationShowOld() ? lastSelectedGroup()! : selectedGroup()!]!}
+                                <GroupView group={rt.groups[groupAnimationShowOld() ? lastSelectedGroup()! : selectedGroup()!]!}
                                            lastIndex={lastSelectedGroup()}
                                            index={selectedGroup()!}
-                                           out={groupAnimationShowOld()}
-                                           cc={cc}/>
+                                           out={groupAnimationShowOld()}/>
                             </Match>
                         </Switch>
                     </div>
@@ -215,9 +185,9 @@ export const Main: Component<MainProps> = (props: MainProps) => {
                             <FormTitle>You have been invited to join {invitePopup()!.groupName}</FormTitle>
                             <img src={`${API_ROOT}/api/Resource/Icon?id=${invitePopup()!.groupIcon.id}`} class={formStyles.PreviewImage}/>
                             <FormButtons>
-                                <FormButton kind="primary" loading={false} onClick={() => { cc.rejectInvite(invitePopup()!); setShowInvitePopup(false); }}>Reject</FormButton>
+                                <FormButton kind="primary" loading={false} onClick={() => { rt.rejectInvite(invitePopup()!); setShowInvitePopup(false); }}>Reject</FormButton>
                                 <FormButton kind="secondary" loading={false} onClick={() => setShowInvitePopup(false)}>Later</FormButton>
-                                <FormButton kind="primary" loading={false} onClick={() => { cc.acceptInvite(invitePopup()!); setShowInvitePopup(false); }}>Accept</FormButton>
+                                <FormButton kind="primary" loading={false} onClick={() => { rt.acceptInvite(invitePopup()!); setShowInvitePopup(false); }}>Accept</FormButton>
                             </FormButtons>
                         </Form>
                     </Show>

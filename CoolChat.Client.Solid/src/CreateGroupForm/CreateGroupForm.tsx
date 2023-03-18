@@ -8,9 +8,10 @@ import { FormButton } from "../Form/FormButton";
 import { FaSolidImage, FaSolidTag } from "solid-icons/fa";
 import { FormTitle } from "../Form/FormTitle";
 import { FormFileInput } from "../Form/FormFileInput";
-import { getToken } from "../JwtHelper";
 import { API_ROOT } from "../Globals";
 import { GroupDto } from "../interfaces/GroupDto";
+import { AuthenticationManager } from "../AuthenticationManager";
+import { RTManager } from "../RTManager";
 
 interface CreateGroupFormProps {
     exitCallback: (success: boolean, response: GroupDto|null) => void;
@@ -54,12 +55,11 @@ export const CreateGroupForm: Component<CreateGroupFormProps> = (props: CreateGr
         await fetch(`${API_ROOT}/api/Group/Create`, {
             method: "post",
             body: requestBody,
-            headers: {
-                "Authorization": "Bearer " + await getToken(),
-            }
+            ...await AuthenticationManager.authorize(),
         })
             .then(res => res.json())
             .then((res: GroupDto) => {
+                RTManager.get().pushGroup(res);
                 props.exitCallback(true, res);
             })
             .catch(res => {

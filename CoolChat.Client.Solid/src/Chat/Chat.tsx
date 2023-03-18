@@ -2,24 +2,26 @@ import { createStore } from "solid-js/store";
 import { EmojiPicker } from "solid-emoji-picker";
 import { FaSolidCirclePlus, FaSolidFaceSmile } from "solid-icons/fa";
 import { Accessor, Component, createEffect, createSignal, For, onCleanup, onMount, Show, Suspense } from "solid-js";
-import { ChatConnectionsManager } from "../ChatConnectionsManager";
-import { MessageModel } from "../interfaces/MessageModel";
+import { MessageDto } from "../interfaces/MessageDto";
 import { Message } from "../Message/Message";
 
 import styles from "./Chat.module.css";
+import { AuthenticationManager } from "../AuthenticationManager";
+import { RTManager } from "../RTManager";
 
 interface ChatProps {
     id: Accessor<number>;
-    cc: ChatConnectionsManager;
     onSendMessage?: (id: number, message: string) => void;
 }
 
 export const Chat: Component<ChatProps> = (props: ChatProps) => {
-    const username = localStorage.getItem("username")!;
+    const username = AuthenticationManager.get().username();
 
-    const [messages, setMessages] = createStore<MessageModel[]>([]);
+    const [messages, setMessages] = createStore<MessageDto[]>([]);
 
     const [emojiPickerVisible, setEmojiPickerVisible] = createSignal(false);
+
+    const rt = RTManager.get();
 
     let chatInputRef: HTMLTextAreaElement|undefined;
     let scrolledRectRef: HTMLDivElement|undefined;
@@ -31,7 +33,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
 
         setMessages([]);
 
-        const m = await props.cc.getMessages(id);
+        const m = await rt.getMessages(id, 0, 50);
 
         if (m == messages)
             return;
@@ -43,21 +45,23 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
         // scrolledRectRef!.style.scrollBehavior = "smooth";
     });
     
-    const pushMessage = async (id: number, message: MessageModel) => {
+    const pushMessage = async (id: number, message: MessageDto) => {
         if (id != props.id())
             return;
         
         const height = scrolledRectRef!.scrollHeight - scrolledRectRef!.getBoundingClientRect().height;
 
-        setMessages(messages => {
-            const toUpdate = [];
-            
-            if (messages.length >= 1)
-                toUpdate.push({...messages.pop()!});
-            toUpdate.push(message);
+        setMessages([...messages, message]);
 
-            return [...messages, ...toUpdate];
-        });
+        // setMessages(messages => {
+        //     const toUpdate = [];
+            
+        //     if (messages.length >= 1)
+        //         toUpdate.push({...messages.pop()!});
+        //     toUpdate.push(message);
+
+        //     return [...messages, ...toUpdate];
+        // });
         
         // await refetch();
         
@@ -78,7 +82,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
     };
 
     onMount(() => {
-        props.cc.onMessageReceived.push(pushMessage);
+        rt.onMessageReceived.push(pushMessage);
 
         window.requestAnimationFrame(() => {
             scrolledRectRef!.scrollTop = 999999;
@@ -86,7 +90,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
     });
 
     onCleanup(() => {
-        props.cc.onMessageReceived.splice(props.cc.onMessageReceived.indexOf(pushMessage));
+        rt.onMessageReceived.splice(rt.onMessageReceived.indexOf(pushMessage));
     })
 
     const chatInput = () => {
@@ -108,7 +112,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
             chatInputRef!.value = "";
             chatInputRef!.rows = 1;
 
-            props.cc.sendMessage(props.id(), value);
+            rt.sendMessage(props.id(), value);
         }
     };
 
@@ -122,14 +126,14 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
                 <div class={styles.ChatMessages} ref={scrolledRectRef}>
                     <div class={styles.ScrolledRect}>
                         <For each={messages}>{(message, i) => {
-                            const hideAuthor = i() > 0 && messages[i() - 1].author == message.author;
-                            const hideDate = i() < messages.length - 1 && messages[i() + 1].author == message.author;
+                            const grouped = i() > 0 && messages[i() - 1].author == message.author;
 
                             return (
-                                <Message author={hideAuthor ? undefined : message.author}
+                                <Message author={message.author}
                                          content={message.content}
-                                         date={hideDate ? undefined : new Date(message.date)}
-                                         sent={message.author == username}/>
+                                         date={new Date(message.date)}
+                                         sent={message.author == username}
+                                         grouped={grouped} />
                             );
                         }}</For>
                     </div>

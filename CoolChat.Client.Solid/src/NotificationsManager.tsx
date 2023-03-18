@@ -1,9 +1,9 @@
 import { FaSolidBell, FaSolidCheck, FaSolidCircleXmark, FaSolidInfo, FaSolidMessage, FaSolidTriangleExclamation } from "solid-icons/fa";
 import { Accessor, Component, createSignal, For, JSX, Setter, Show } from "solid-js";
 import { Portal } from "solid-js/web";
+import { AuthenticationManager } from "./AuthenticationManager";
 import { API_ROOT } from "./Globals";
 import { INotification, NotificationKind } from "./interfaces/INotification";
-import { getToken } from "./JwtHelper";
 
 import styles from "./NotificationsManager.module.css";
 
@@ -45,7 +45,7 @@ export class NotificationsManager {
                     method: "post",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer " + await getToken(),
+                        ...(await AuthenticationManager.authorize()).headers,
                     },
                     body: JSON.stringify({
                         endpoint: subscription.endpoint,
