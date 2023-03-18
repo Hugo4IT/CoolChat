@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, Match, on, onMount, Switch } from 'solid-js';
+import { Component, createEffect, createSignal, Match, on, onMount, Switch, untrack } from 'solid-js';
 
 import styles from './App.module.css';
 import { LoginForm } from './LoginForm/LoginForm';
@@ -16,6 +16,22 @@ const App: Component = () => {
     const notificationsManager = new NotificationsManager();
     const rtManager = new RTManager();
     
+    // Change view with delay for animation
+    createEffect(async () => {
+        const loggedIn = authenticationManager.loggedIn();
+        
+        if (untrack(view) == "login-attempt")
+            return;
+        
+        if (loggedIn) {
+            await rtManager.load();
+            setTimeout(() => setView("main"), 300);
+        } else {
+            await rtManager.unload();
+            setTimeout(() => setView("login"), 300);
+        }
+    });
+
     onMount(async () => {
         await authenticationManager.refresh();
 
@@ -25,17 +41,6 @@ const App: Component = () => {
             await rtManager.load();
             setView("main");
         }
-
-        // Change view with delay for animation
-        on(authenticationManager.loggedIn, async loggedIn => {
-            if (loggedIn) {
-                await rtManager.load();
-                setTimeout(() => setView("main"), 300);
-            } else {
-                await rtManager.unload();
-                setTimeout(() => setView("login"), 300);
-            }
-        });
     });
 
     createEffect(() => {
