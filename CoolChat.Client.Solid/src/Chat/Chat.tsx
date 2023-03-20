@@ -40,9 +40,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
         
         setMessages(m);
 
-        // scrolledRectRef!.style.scrollBehavior = "initial";
         scrolledRectRef!.scrollTop = 999999;
-        // scrolledRectRef!.style.scrollBehavior = "smooth";
     });
     
     const pushMessage = async (id: number, message: MessageDto) => {
@@ -52,28 +50,6 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
         const height = scrolledRectRef!.scrollHeight - scrolledRectRef!.getBoundingClientRect().height;
 
         setMessages([...messages, message]);
-
-        // setMessages(messages => {
-        //     const toUpdate = [];
-            
-        //     if (messages.length >= 1)
-        //         toUpdate.push({...messages.pop()!});
-        //     toUpdate.push(message);
-
-        //     return [...messages, ...toUpdate];
-        // });
-        
-        // await refetch();
-        
-        // mutate(m => {
-        //     if (m!.length >= 1) {
-        //         const last = m!.pop()!;
-        //         return [...m!, last, message];
-        //     }
-
-        //     return [...m!];
-        // });
-        // mutate(m => new Array(m![0]!));
 
         window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
             if (scrolledRectRef!.scrollTop >= height - 50)
