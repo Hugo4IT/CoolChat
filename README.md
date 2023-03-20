@@ -9,11 +9,17 @@ and store it in a user-secret:
 dotnet user-secrets set "SecretSigningKey" "{your signing key}" --project CoolChat.Server.ASPNET
 ```
 
+You must also run the migrations:
+
+```bash
+dotnet ef database update --project CoolChat.Server.ASPNET
+```
+
 ## Running
 
 To start the ASP.NET backend, simply run
 
-```
+```bash
 dotnet run --project ./CoolChat.Server.ASPNET --launch-profile http
 ```
 
