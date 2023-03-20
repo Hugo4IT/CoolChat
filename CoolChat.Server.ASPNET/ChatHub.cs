@@ -10,6 +10,30 @@ using MD = Markdig.Markdown;
 
 namespace CoolChat.Server.ASPNET;
 
+public class HubResponse
+{
+    public bool Success { get; set; }
+    public Dictionary<string, string>? Errors { get; set; }
+
+    public static HubResponse FromValidationResult(IValidationResult result) => result switch
+    {
+        IValid valid => new HubResponse { Success = true },
+        IInvalid invalid => new HubResponse { Success = false, Errors = invalid.Errors },
+        _ => throw new InvalidCastException(),
+    };
+
+    public static HubResponse FromValidationResult<T>(IValidationResult<T> result) where T : notnull => result switch
+    {
+        IValid<T> valid => new HubResponse { Success = true },
+        IInvalid<T> invalid => new HubResponse { Success = false, Errors = invalid.Errors },
+        _ => throw new InvalidCastException(),
+    };
+
+    public static HubResponse Ok() => new HubResponse { Success = true };
+    public static HubResponse Fault(string error) => new HubResponse { Success = false, Errors = new Dictionary<string, string>() { ["default"] = error }};
+    public static HubResponse Fault(Dictionary<string, string> errors) => new HubResponse { Success = false, Errors = errors};
+}
+
 [Authorize]
 public class ChatHub : Hub
 {
@@ -17,15 +41,17 @@ public class ChatHub : Hub
 
     private readonly IWebPushService _webPushService;
     private readonly IAccountService _accountService;
+    private readonly IInviteService _inviteService;
     private readonly IGroupService _groupService;
     private readonly IChatService _chatService;
     private readonly DataContext _dataContext;
     private readonly ILogger<ChatHub> _logger;
 
-    public ChatHub(IAccountService accountService, IWebPushService webPushService, IGroupService groupService, IChatService chatService, DataContext dataContext, ILogger<ChatHub> logger)
+    public ChatHub(IAccountService accountService, IWebPushService webPushService, IInviteService inviteService, IGroupService groupService, IChatService chatService, DataContext dataContext, ILogger<ChatHub> logger)
     {
         _accountService = accountService;
         _webPushService = webPushService;
+        _inviteService = inviteService;
         _groupService = groupService;
         _chatService = chatService;
         _dataContext = dataContext;
@@ -103,47 +129,26 @@ public class ChatHub : Hub
         );
     }
 
-    public struct CreateInviteResponse
-    {
-        public bool Success { get; set; }
-        public string Error { get; set; }
-    }
+    
 
-    public async Task<CreateInviteResponse> CreateInvite(int groupId, string to)
+    public async Task<HubResponse> CreateInvite(int groupId, string to)
     {
         Account account = _accountService.GetByUsername(Context.User!.Identity!.Name!)!;
         Account? recipient = _accountService.GetByUsername(to);
         Group? group = _groupService.GetById(groupId);
 
-        if (recipient == null)
-            return new CreateInviteResponse { Success = false, Error = "This account doesn't exist" };
-        
-        if (account.Id == recipient.Id)
-            return new CreateInviteResponse { Success = false, Error = "Can't send an invite to yourself, dummy" };
+        IValidationResult<Invite> result = await _inviteService.CreateInvite(account, recipient, group);
 
-        if (group == null)
-            return new CreateInviteResponse { Success = false, Error = "You're trying to invite this person to a group that doesn't exist" };
-        
-        if (!account.CanInviteUserTo(group))
-            return new CreateInviteResponse { Success = false, Error = "You aren't allowed to invite people to this group" };
+        if (result is IInvalid<Invite> invalid)
+            return HubResponse.FromValidationResult(invalid);
 
-        Invite invite = new Invite
-        {
-            From = account,
-            To = recipient,
-            Type = InviteType.Group,
-            InvitedId = group.Id,
-            Expires = DateTime.Now.AddDays(7),
-        };
+        Invite invite = result.Valid()!.Value;
 
-        _dataContext.Invites.Add(invite);
-        await _dataContext.SaveChangesAsync();
-
-        await Clients.Group($"u_{recipient.Id}")
+        await Clients.Group($"u_{recipient!.Id}")
                      .SendAsync("ReceiveGroupInvite", new InviteDto
                      {
                          InviteId = invite.Id,
-                         GroupId = group.Id,
+                         GroupId = group!.Id,
                          GroupName = group.Name,
                          MemberCount = group.Members.Count,
                          GroupIcon = group.Icon,
@@ -151,55 +156,49 @@ public class ChatHub : Hub
                          SenderId = account.Id
                      });
                     
-        return new CreateInviteResponse { Success = true, Error = "" };
+        return HubResponse.Ok();
     }
 
-    public async Task AcceptInvite(int inviteId)
+    public async Task<HubResponse> AcceptInvite(int inviteId)
     {
         Invite? invite = _dataContext.Invites.FirstOrDefault(i => i.Id == inviteId);
 
         if (invite == null)
-            return;
+            return HubResponse.Fault("Invite does not exist");
         
-        Group? group = _groupService.GetById(invite.InvitedId);
-
-        if (invite.Expires < DateTime.Now || group == null || !invite.From.CanInviteUserTo(group))
+        Account account = _accountService.GetByUsername(Context.User!.Identity!.Name!)!;
+        
+        if (await _inviteService.AcceptInvite(invite, account) is IInvalid invalid)
         {
-            _dataContext.Invites.Remove(invite);
-            await _dataContext.SaveChangesAsync();
-            return;
+            _logger.LogWarning($"Failed to accept invite: {invalid.SafeFormattedErrors()}");
+            return HubResponse.FromValidationResult(invalid);
         }
 
-        Account account = _accountService.GetByUsername(Context.User!.Identity!.Name!)!;
-
-        if (account.Id != invite.To!.Id)
-            return;
-
-        _groupService.AddMember(group, account);
-
-        _dataContext.Invites.Remove(invite);
-        await _dataContext.SaveChangesAsync();
+        Group group = _groupService.GetById(invite.InvitedId)!;
 
         await SubscribeToGroup(account.Name, group);
-
         await Clients.Group($"u_{account.Id}")
                      .SendAsync("GroupJoined", GroupDto.FromModel(group));
+                    
+        return HubResponse.Ok();
     }
 
-    public async Task RejectInvite(int inviteId)
+    public async Task<HubResponse> RejectInvite(int inviteId)
     {
         Invite? invite = _dataContext.Invites.FirstOrDefault(i => i.Id == inviteId);
 
         if (invite == null)
-            return;
+            return HubResponse.Fault("Invite does not exist");
 
         Account account = _accountService.GetByUsername(Context.User!.Identity!.Name!)!;
 
-        if (account.Id != invite.To!.Id)
-            return;
+        if (await _inviteService.RejectInvite(invite, account) is IInvalid invalid)
+        {
+            _logger.LogWarning($"Failed to reject invite: {invalid.SafeFormattedErrors()}");
+            return HubResponse.FromValidationResult(invalid);
+        }
 
-        _dataContext.Invites.Remove(invite);
-        await _dataContext.SaveChangesAsync();
+        return HubResponse.Ok();
     }
 
     public override async Task OnConnectedAsync()

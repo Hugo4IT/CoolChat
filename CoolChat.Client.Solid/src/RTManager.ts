@@ -2,11 +2,35 @@ import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { AuthenticationManager } from "./AuthenticationManager";
 import { API_ROOT } from "./Globals";
-import { GetMessagesResponse } from "./interfaces/GetMessagesResponse";
 import { GroupDto } from "./interfaces/GroupDto";
 import { InviteDto } from "./interfaces/InviteDto";
 import { MessageDto } from "./interfaces/MessageDto";
 import { IndexRange, LazyLoadedArray } from "./LazyLoadedArray";
+
+export class RTResponse {
+    private success: boolean;
+    private errors?: Map<string, string>;
+
+    public constructor(raw: any) {
+        this.success = raw.success;
+
+        if (!this.success) {
+            this.errors = new Map();
+
+            for (const [key, value] of Object.entries(raw.errors))
+                this.errors.set(key, value);
+        }
+    }
+
+    public isOk = () => this.success;
+    public getDefaultError = () => {
+        if (!this.errors)
+            return undefined;
+
+        return this.errors.get("default")
+            ?? <string|undefined>this.errors.values().next().value;
+    };
+}
 
 export class RTManager {
     private static instance: RTManager;
@@ -49,8 +73,8 @@ export class RTManager {
                 callback(invite);
         });
 
-        this.connection.on("GroupJoined", (group: GroupDto) => {
-            this.pushGroup(group);
+        this.connection.on("GroupJoined", async (group: GroupDto) => {
+            await this.pushGroup(group);
 
             for (const callback of this.onGroupJoined)
                 callback(group);
@@ -66,25 +90,32 @@ export class RTManager {
         this.chatCache = new Map();
     }
 
-    public load = async () => {
+    public load = async (setLoadText: (text: string) => void = () => {}) => {
+        setLoadText("Connecting...");
         await this.connection.start();
+        
+        setLoadText("Loading groups...");
         this.setGroups(await this.fetchGroups() ?? []);
+        setLoadText("Loading invites...");
         this.setInvites(await this.fetchInvites() ?? []);
-
+        
         // Precache chats
+        setLoadText("Preloading chats...");
         this.precacheAllChats();
+
+        setLoadText("Done!");
     };
 
     public unload = async () => {
-        this.connection.stop();
+        await this.connection.stop();
         this.setGroups([]);
         this.setInvites([]);
         this.chatCache.clear();
     };
 
-    public pushGroup = (group: GroupDto) => {
+    public pushGroup = async (group: GroupDto) => {
         this.setGroups([...this.groups, group]);
-        this.precacheAllChats();
+        await this.precacheAllChats();
     };
 
     public pushInvite = (invite: InviteDto) => {
@@ -99,24 +130,20 @@ export class RTManager {
         return await this.chatCache.get(id)!.getRange(new IndexRange(start, start + count));
     };
 
-    public sendMessage = (id: number, message: string) => {
+    public sendMessage = (id: number, message: string) =>
         this.connection.send("SendMessage", id, message);
-    };
 
-    public sendInvite = async (groupId: number, username: string) => {
-        return await this.connection.invoke("CreateInvite", groupId, username);
-    };
+    public sendInvite = async (groupId: number, username: string) =>
+        new RTResponse(await this.connection.invoke("CreateInvite", groupId, username));
 
-    public acceptInvite = (invite: InviteDto) => {
-        this.connection.send("AcceptInvite", invite.inviteId);
-    };
+    public acceptInvite = async (invite: InviteDto) =>
+        new RTResponse(await this.connection.invoke("AcceptInvite", invite.inviteId));
 
-    public rejectInvite = (invite: InviteDto) => {
-        this.connection.send("RejectInvite", invite.inviteId);
-    };
+    public rejectInvite = async (invite: InviteDto) =>
+        new RTResponse(await this.connection.invoke("RejectInvite", invite.inviteId));
 
     private precacheAllChats = async () => {
-        await Promise.all(this.groups.flatMap(g => g.channels.map(async c => await this.getMessages(c.chatId, 0, 50))));
+        await Promise.all(this.groups.flatMap(g => g.channels.map(async c => await this.getMessages(c.chatId, 0, 100))));
     };
 
     private newMessageLoaderFor = (id: number) => 

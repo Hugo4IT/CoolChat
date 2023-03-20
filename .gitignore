@@ -5,6 +5,7 @@
 
 **/UserContent*/
 **/*.db*
+**/*.db
 
 # User-specific files
 *.rsuser

@@ -33,7 +33,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
 
         setMessages([]);
 
-        const m = await rt.getMessages(id, 0, 50);
+        const m = await rt.getMessages(id, 0, 100);
 
         if (m == messages)
             return;

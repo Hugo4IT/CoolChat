@@ -73,6 +73,7 @@ internal static class Program
         builder.Services.AddScoped<IGroupService, GroupService>();
         builder.Services.AddScoped<IResourceService, ResourceService>();
         builder.Services.AddScoped<IChatService, ChatService>();
+        builder.Services.AddScoped<IInviteService, InviteService>();
         builder.Services.AddSingleton<IWebPushService, WebPushService>();
 
         builder.Services.AddControllers();

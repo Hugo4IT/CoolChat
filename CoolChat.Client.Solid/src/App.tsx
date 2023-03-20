@@ -12,6 +12,8 @@ const App: Component = () => {
     const [view, setView] = createSignal("login-attempt");
     const [accent, setAccent] = createSignal("blue");
 
+    const [loadText, setLoadText] = createSignal("");
+
     const authenticationManager = new AuthenticationManager();
     const notificationsManager = new NotificationsManager();
     const rtManager = new RTManager();
@@ -24,7 +26,7 @@ const App: Component = () => {
             return;
         
         if (loggedIn) {
-            await rtManager.load();
+            await rtManager.load(setLoadText);
             setTimeout(() => setView("main"), 300);
         } else {
             await rtManager.unload();
@@ -38,7 +40,7 @@ const App: Component = () => {
         if (!authenticationManager.loggedIn()) {
             setView("login");
         } else {
-            await rtManager.load();
+            await rtManager.load(setLoadText);
             setView("main");
         }
     });
@@ -55,6 +57,7 @@ const App: Component = () => {
             <Switch>
                 <Match when={view() == "login-attempt"}>
                     <FaSolidCircleNotch size={24} class={styles.LoadingSpinner} />
+                    <span class={styles.LoadText}>{loadText()}</span>
                 </Match>
                 <Match when={view() == "login"}>
                     <LoginForm />

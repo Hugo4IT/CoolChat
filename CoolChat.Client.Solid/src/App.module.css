@@ -11,8 +11,9 @@
 
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    gap: 16px;
 
     background: var(--background-color);
     color: var(--color);
@@ -22,4 +23,8 @@
 
 .LoadingSpinner {
     animation: spin 1.5s linear infinite;
+}
+
+.LoadText {
+    color: var(--oc-gray-5);
 }

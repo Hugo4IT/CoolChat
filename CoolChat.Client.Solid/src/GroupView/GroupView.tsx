@@ -47,12 +47,13 @@ export const GroupView: Component<GroupViewProps> = (props: GroupViewProps) => {
     const inviteFunction = async () => {
         setLoading("invite");
 
-        const { success, error } = await rt.sendInvite(props.group.id, invitePopupValue());
+        const response = await rt.sendInvite(props.group.id, invitePopupValue());
 
-        setInvitePopupHasError(!success);
-        setInvitePopupError(error);
+        setInvitePopupHasError(!response.isOk());
 
-        if (success)
+        if (invitePopupHasError())
+            setInvitePopupError(response.getDefaultError()!);
+        else
             invitePopupInputRef!.value = "";
 
         setLoading("nothing");

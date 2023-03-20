@@ -81,6 +81,20 @@ export const Main: Component<MainProps> = (props: MainProps) => {
         setLoading("main");
     };
 
+    const acceptInviteCallback = async () => {
+        setLoading("invite-accept");
+        await rt.acceptInvite(invitePopup()!);
+        setLoading("nothing");
+        setShowInvitePopup(false);
+    };
+    
+    const rejectInviteCallback = async () => {
+        setLoading("invite-reject");
+        await rt.rejectInvite(invitePopup()!);
+        setLoading("nothing");
+        setShowInvitePopup(false);
+    };
+
     // const cc = new ChatConnectionsManager();
     const rt = RTManager.get();
 
@@ -185,9 +199,9 @@ export const Main: Component<MainProps> = (props: MainProps) => {
                             <FormTitle>You have been invited to join {invitePopup()!.groupName}</FormTitle>
                             <img src={`${API_ROOT}/api/Resource/Icon?id=${invitePopup()!.groupIcon.id}`} class={formStyles.PreviewImage}/>
                             <FormButtons>
-                                <FormButton kind="primary" loading={false} onClick={() => { rt.rejectInvite(invitePopup()!); setShowInvitePopup(false); }}>Reject</FormButton>
+                                <FormButton kind="primary" loading={loading() == "invite-reject"} onClick={rejectInviteCallback}>Reject</FormButton>
                                 <FormButton kind="secondary" loading={false} onClick={() => setShowInvitePopup(false)}>Later</FormButton>
-                                <FormButton kind="primary" loading={false} onClick={() => { rt.acceptInvite(invitePopup()!); setShowInvitePopup(false); }}>Accept</FormButton>
+                                <FormButton kind="primary" loading={loading() == "invite-accept"} onClick={acceptInviteCallback}>Accept</FormButton>
                             </FormButtons>
                         </Form>
                     </Show>
