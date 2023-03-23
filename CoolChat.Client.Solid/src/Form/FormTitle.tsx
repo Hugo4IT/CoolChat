@@ -1,7 +1,7 @@
 import { Component } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
 
-import styles from "./Form.module.css";
+import styles from "./Form.module.pcss";
 
 interface FormTitleProps {
     children: JSX.Element;

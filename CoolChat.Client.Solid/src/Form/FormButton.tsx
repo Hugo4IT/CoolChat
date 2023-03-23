@@ -2,8 +2,8 @@ import { FaSolidCircleNotch } from "solid-icons/fa";
 import { Component, Show } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
 
-import styles from "./Form.module.css";
-import globalStyles from "../GlobalStyles.module.css";
+import styles from "./Form.module.pcss";
+import globalStyles from "../GlobalStyles.module.pcss";
 
 interface FormButtonProps {
     kind: "primary"|"secondary";

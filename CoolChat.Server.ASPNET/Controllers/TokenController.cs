@@ -1,16 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using CoolChat.Domain.Interfaces;
-using CoolChat.Domain.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoolChat.Server.ASPNET.Controllers;
 
-public class RefreshParameters
+public class Tokens
 {
     public string? AccessToken { get; set; }
     public string? RefreshToken { get; set; }
@@ -20,8 +13,8 @@ public class RefreshParameters
 [Route("api/[controller]")]
 public class TokenController : ControllerBase
 {
-    private readonly DataContext _dataContext;
     private readonly IAccountService _accountService;
+    private readonly DataContext _dataContext;
     private readonly ITokenService _tokenService;
 
     public TokenController(DataContext dataContext, IAccountService accountService, ITokenService tokenService)
@@ -32,36 +25,36 @@ public class TokenController : ControllerBase
     }
 
     [HttpPost("Refresh")]
-    public IActionResult Refresh([FromBody] RefreshParameters parameters)
+    public async Task<IActionResult> Refresh([FromBody] Tokens parameters)
     {
         if (parameters == null || parameters.AccessToken == null || parameters.RefreshToken == null)
             return BadRequest("Invalid client request");
-        
-        string accessToken = parameters.AccessToken;
-        string refreshToken = parameters.RefreshToken;
 
-        ClaimsPrincipal principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
-        string? username = principal.Identity?.Name;
+        var accessToken = parameters.AccessToken;
+        var refreshToken = parameters.RefreshToken;
+
+        var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
+        var username = principal.Identity?.Name;
 
         if (username is null)
             return BadRequest("Invalid client request");
 
-        Account? account = _accountService.GetByUsername(username);
+        var account = await _accountService.GetByUsernameAsync(username);
 
         if (account == null || account.RefreshToken != refreshToken || DateTime.Now <= account.RefreshTokenExpiryTime)
             return BadRequest("Invalid client request");
-        
-        string newAccessToken = _tokenService.GenerateAccessToken(principal.Claims);
-        string newRefreshToken = _tokenService.GenerateRefreshToken();
+
+        var newAccessToken = _tokenService.GenerateAccessToken(principal.Claims);
+        var newRefreshToken = _tokenService.GenerateRefreshToken();
 
         account.RefreshToken = newRefreshToken;
         account.RefreshTokenExpiryTime = DateTime.Now.AddMinutes(5);
         _dataContext.SaveChanges();
 
-        return Ok(new AuthenticatedResponse()
+        return Ok(new Tokens
         {
-            Token = newAccessToken,
-            RefreshToken = newRefreshToken,
+            AccessToken = newAccessToken,
+            RefreshToken = newRefreshToken
         });
     }
 }

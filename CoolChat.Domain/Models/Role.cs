@@ -2,11 +2,11 @@ namespace CoolChat.Domain.Models;
 
 public class Role : BaseEntity
 {
-    public string Name { get; set; }
-    public string Color { get; set; }
+    public required string Name { get; set; }
+    public required string Color { get; set; }
 
-    public virtual Group Group { get; set; }
-    public virtual ICollection<Account> Accounts { get; set; }
+    public virtual required Group Group { get; set; }
+    public virtual required ICollection<Account> Accounts { get; set; }
 
-    public virtual RolePermissions Permissions { get; set; }
+    public virtual required RolePermissions Permissions { get; set; }
 }

@@ -8,14 +8,11 @@ namespace CoolChat.Server.ASPNET.Controllers;
 
 public class SubscribeWebPushParameters
 {
-    [Required]
-    public string Endpoint { get; set; }
+    [Required] public required string Endpoint { get; set; }
 
-    [Required]
-    public string Key_p256dh { get; set; }
+    [Required] public required string Key_p256dh { get; set; }
 
-    [Required]
-    public string Key_auth { get; set; }
+    [Required] public required string Key_auth { get; set; }
 }
 
 [ApiController]
@@ -31,25 +28,25 @@ public class AccountController : ControllerBase
         _dataContext = dataContext;
     }
 
-    [HttpPost("SubscribeWebPush"), Authorize]
+    [HttpPost("SubscribeWebPush")]
+    [Authorize]
     public async Task<IActionResult> SubscribeWebPush([FromBody] SubscribeWebPushParameters parameters)
     {
-        Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
+        var account = (await _accountService.GetByUsernameAsync(User.Identity!.Name!))!;
 
-        WebPushSubscription subscription = new WebPushSubscription
+        var subscription = new WebPushSubscription
         {
             Endpoint = parameters.Endpoint,
             Key_p256dh = parameters.Key_p256dh,
-            Key_auth = parameters.Key_auth,
+            Key_auth = parameters.Key_auth
         };
 
         // This is safe because an account can only have 10 subscriptions
-        List<WebPushSubscription> subscriptions = account.WebPushSubscriptions.ToList();
+        var subscriptions = account.WebPushSubscriptions.ToList();
 
-        if (subscriptions.FirstOrDefault(s => s.Endpoint == subscription.Endpoint) is WebPushSubscription s) {
-            if (s.Key_auth == subscription.Key_auth && s.Key_p256dh == subscription.Key_p256dh) {
-                return Conflict();
-            }
+        if (subscriptions.FirstOrDefault(s => s.Endpoint == subscription.Endpoint) is WebPushSubscription s)
+        {
+            if (s.Key_auth == subscription.Key_auth && s.Key_p256dh == subscription.Key_p256dh) return Conflict();
 
             subscriptions.Remove(s);
         }
@@ -62,16 +59,17 @@ public class AccountController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("UnsubscribeWebPush"), Authorize]
+    [HttpPost("UnsubscribeWebPush")]
+    [Authorize]
     public async Task<IActionResult> UnsubscribeWebPush([FromBody] SubscribeWebPushParameters parameters)
     {
-        Account account = _accountService.GetByUsername(User.Identity!.Name!)!;
+        var account = (await _accountService.GetByUsernameAsync(User.Identity!.Name!))!;
 
-        WebPushSubscription subscription = new WebPushSubscription
+        var subscription = new WebPushSubscription
         {
             Endpoint = parameters.Endpoint,
             Key_p256dh = parameters.Key_p256dh,
-            Key_auth = parameters.Key_auth,
+            Key_auth = parameters.Key_auth
         };
 
         account.WebPushSubscriptions.Remove(subscription);

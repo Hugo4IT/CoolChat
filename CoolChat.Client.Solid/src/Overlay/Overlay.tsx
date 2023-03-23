@@ -1,7 +1,7 @@
 import { Component, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
 
-import styles from "./Overlay.module.css"
+import styles from "./Overlay.module.pcss"
 
 interface OverlayProps {
     children: JSX.Element;

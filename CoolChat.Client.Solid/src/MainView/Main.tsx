@@ -1,8 +1,8 @@
 import { batch, Component, createEffect, createResource, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 
-import styles from "./Main.module.css";
-import formStyles from "../Form/Form.module.css";
-import globalStyles from "../GlobalStyles.module.css";
+import styles from "./Main.module.pcss";
+import formStyles from "../Form/Form.module.pcss";
+import globalStyles from "../GlobalStyles.module.pcss";
 import { FaSolidCircleNotch, FaSolidPlus, FaSolidRightFromBracket } from "solid-icons/fa";
 import { CreateGroupForm } from "../CreateGroupForm/CreateGroupForm";
 import { API_ROOT } from "../Globals";

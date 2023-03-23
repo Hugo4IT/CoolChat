@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Start" type="CompoundRunConfigurationType">
+    <toRun name="CoolChat.Server.ASPNET: http" type="LaunchSettings" />
+    <toRun name="dev" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>

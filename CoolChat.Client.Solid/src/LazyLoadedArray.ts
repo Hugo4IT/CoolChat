@@ -66,10 +66,11 @@ export class IndexRange {
         }
     };
 
+    public shift = (by: number) => new IndexRange(this.start + by, this.end + by);
+
     public static optimized = (ranges: IndexRange[]) => {
-        ranges = new Array(...ranges);
-        ranges = ranges.sort((a, b) => a.start - b.start)
-                       .filter(r => r.count() > 0);
+        ranges = [...ranges].sort((a, b) => a.start - b.start)
+                            .filter(r => r.count() > 0);
 
         let index = 0;
         while (index < ranges.length - 1) {
@@ -139,18 +140,28 @@ export class LazyLoadedArray<T> {
         this.loadCallback = loadCallback;
     }
 
-    public pushFront(value: T) {
+    public pushFront = (value: T) => {
+        console.log(this.map);
         if (this.map.has(0)) {
+            console.log("1");
             const firstItem = [value, ...this.map.get(0)!];
-
+            
             this.map.delete(0);
             this.shiftMap(1);
             this.map.set(0, firstItem);
+            this.loadedRanges[0].start = 0;
+            console.log(this.map);
         } else {
+            console.log("2");
             this.shiftMap(1);
-
+            
             this.map.set(0, [value]);
+            this.loadedRanges[0] = new IndexRange(0, 1);
+            console.log(this.map);
         }
+        
+        this.updateLoadedRanges();
+        console.log(this.map);
     }
 
     public getRange = async (range: IndexRange) => {
@@ -211,11 +222,14 @@ export class LazyLoadedArray<T> {
     };
 
     private shiftMap = (by: number) => {
-        const newMap = new Map();
+        const newMap = new Map<number, T[]>();
         for (const [key, value] of this.map.entries()) {
             newMap.set(key + by, value);
         }
         this.map = newMap;
+
+        for (let i = 0; i < this.loadedRanges.length; i++)
+            this.loadedRanges[i] = this.loadedRanges[i].shift(by);
     };
 
     private getTotalRange = () => new IndexRange(this.loadedRanges.at(0)?.start ?? 0, this.loadedRanges.at(-1)?.end ?? 0);

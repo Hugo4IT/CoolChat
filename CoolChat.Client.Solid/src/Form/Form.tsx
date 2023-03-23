@@ -1,6 +1,6 @@
 import { Component, JSX, onMount } from "solid-js";
 
-import styles from "./Form.module.css";
+import styles from "./Form.module.pcss";
 
 interface FormProps {
     children: JSX.Element;

@@ -1,7 +1,7 @@
 import { Component, createSignal, For, Match, onCleanup, onMount, Switch } from "solid-js";
 import { Chat } from "../Chat/Chat";
 
-import styles from "./GroupView.module.css";
+import styles from "./GroupView.module.pcss";
 import { FaSolidFlag, FaSolidGear, FaSolidHashtag, FaSolidPlus, FaSolidRightFromBracket, FaSolidUser, FaSolidUserPlus, FaSolidUsers } from "solid-icons/fa";
 import { GroupDto } from "../interfaces/GroupDto";
 import { Overlay } from "../Overlay/Overlay";

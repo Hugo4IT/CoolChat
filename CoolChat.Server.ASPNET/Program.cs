@@ -1,11 +1,12 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CoolChat.Domain.Interfaces;
-using CoolChat.Server.ASPNET.Services;
 using CoolChat.Server.ASPNET;
+using CoolChat.Server.ASPNET.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 internal static class Program
 {
@@ -14,17 +15,17 @@ internal static class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Logging.ClearProviders()
-                       .AddColorConsoleLogger(options =>
-                       {
-                           options.Mask.Add(LogLevel.Debug);
-                           options.Mask.Add(LogLevel.Trace);
-                       });
+            .AddColorConsoleLogger(options =>
+            {
+                options.Mask.Add(LogLevel.Debug);
+                options.Mask.Add(LogLevel.Trace);
+            });
 
         builder.Services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -35,7 +36,8 @@ internal static class Program
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = "http://localhost:3000/",
                     ValidAudience = "http://localhost:3000/",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SecretSigningKey"]!)),
+                    IssuerSigningKey =
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SecretSigningKey"]!))
                 };
 
                 options.Events = new JwtBearerEvents
@@ -44,29 +46,27 @@ internal static class Program
                     {
                         string? accessToken = context.Request.Query["access_token"];
 
-                        PathString path = context.HttpContext.Request.Path;
+                        var path = context.HttpContext.Request.Path;
                         if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/signalr/chathub"))
-                        {
                             context.Token = accessToken;
-                        }
                         return Task.CompletedTask;
                     }
                 };
             });
 
         builder.Services.AddIdentityCore<IdentityUser>(options =>
-        {
-            options.SignIn.RequireConfirmedAccount = true;
-            options.Lockout.AllowedForNewUsers = true;
-            options.Password.RequiredLength = 12;
-            options.Password.RequireNonAlphanumeric = false;
-            options.Password.RequireDigit = false;
-        })
-        .AddEntityFrameworkStores<DataContext>();
+            {
+                options.SignIn.RequireConfirmedAccount = true;
+                options.Lockout.AllowedForNewUsers = true;
+                options.Password.RequiredLength = 12;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireDigit = false;
+            })
+            .AddEntityFrameworkStores<DataContext>();
 
         builder.Services.AddDbContext<DataContext>(options =>
             options.UseLazyLoadingProxies()
-                   .UseSqlite(builder.Configuration["ConnectionStrings:Default"]));
+                .UseSqlite(builder.Configuration["ConnectionStrings:Default"]));
 
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAccountService, AccountService>();
@@ -82,31 +82,50 @@ internal static class Program
 
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy(name: "allowApi", policy =>
+            options.AddPolicy("allowApi", policy =>
             {
                 policy.WithOrigins("http://localhost:3000",
-                                   "http://10.10.1.28:3000")
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
+                        "http://10.10.1.28:3000")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
         });
 
         builder.Services.AddSignalR();
 
-        builder.Services.AddExceptionHandler(options =>
-            options.ExceptionHandler = async (HttpContext context) =>
+        builder.Services.AddExceptionHandler((ExceptionHandlerOptions options, ILogger<ExecutionContext> logger) =>
+            options.ExceptionHandler = async context =>
             {
-                Console.WriteLine("An error has occurred");
+                var exceptionFeature = context.Features.Get<IExceptionHandlerPathFeature>();
 
-                // ILogger logger = app.Services.GetRequiredService<ILogger>();
+                StringBuilder builder = new();
+                if (exceptionFeature != null)
+                {
+                    builder.Append($"An error occurred while trying to serve {exceptionFeature.Path}");
+                    builder.AppendLine();
 
-                byte[] buffer = new byte[(int)context.Request.ContentLength!];
-                await context.Request.Body.ReadExactlyAsync(buffer, 0, (int)context.Request.ContentLength!);
+                    builder.Append(exceptionFeature.Error.Message);
+                    builder.AppendLine();
+                }
 
-                string error = Encoding.UTF8.GetString(buffer);
-                // logger.LogError(error);
-                Console.WriteLine(error);
+                if (context.Request.ContentLength > 0)
+                {
+                    var buffer = new byte[(int)context.Request.ContentLength!];
+                    await context.Request.Body.ReadExactlyAsync(buffer, 0, (int)context.Request.ContentLength!);
+
+                    var error = Encoding.UTF8.GetString(buffer);
+                    builder.AppendLine();
+                    builder.Append("Request body:");
+                    builder.AppendLine();
+                    builder.Append(error);
+                    builder.AppendLine();
+                }
+
+                if (builder.Length == 0)
+                    builder.Append("An unknown error occurred :/");
+
+                logger.LogError(builder.ToString());
             }
         );
 
@@ -117,10 +136,10 @@ internal static class Program
         {
             app.UseSwagger();
             app.UseSwaggerUI();
-
-            app.UseExceptionHandler();
         }
 
+        app.UseHttpLogging();
+        app.UseExceptionHandler();
         app.UseCors("allowApi");
         // app.UseHttpsRedirection();
 

@@ -2,7 +2,7 @@ namespace CoolChat.Domain.Models;
 
 public class WebPushSubscription : BaseEntity
 {
-    public string Endpoint { get; set; }
-    public string Key_p256dh { get; set; }
-    public string Key_auth { get; set; }
+    public required string Endpoint { get; set; }
+    public required string Key_p256dh { get; set; }
+    public required string Key_auth { get; set; }
 }

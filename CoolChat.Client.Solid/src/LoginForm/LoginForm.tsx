@@ -1,15 +1,14 @@
 import { Component, createSignal } from "solid-js";
 import { FaSolidKey, FaSolidUser } from 'solid-icons/fa';
 
-import styles from './LoginForm.module.css';
+import styles from './LoginForm.module.pcss';
 import { Form } from "../Form/Form";
 import { FormTextInput } from "../Form/FormTextInput";
 import { FormButtons } from "../Form/FormButtons";
 import { FormButton } from "../Form/FormButton";
 import { FormTitle } from "../Form/FormTitle";
 import { FormCheckBox } from "../Form/FormCheckbox";
-import { IDBManager } from "../IDBManager";
-import { AuthenticationFailed, AuthenticationManager } from "../AuthenticationManager";
+import { AuthenticationManager } from "../AuthenticationManager";
 
 interface LoginFormProps {
 
@@ -36,13 +35,11 @@ export const LoginForm: Component<LoginFormProps> = (props: LoginFormProps) => {
 
         setLoading("nothing");
 
-        if (result.success()) {
+        if (result.isOk()) {
             setLoading("main");
         } else {
-            const { errors } = result as AuthenticationFailed;
-
-            setUsernameError(errors.username);
-            setPasswordError(errors.password);
+            setUsernameError(result.getError("username"));
+            setPasswordError(result.getError("password"));
         }
     };
     
@@ -56,13 +53,11 @@ export const LoginForm: Component<LoginFormProps> = (props: LoginFormProps) => {
 
         setLoading("nothing");
 
-        if (result.success()) {
+        if (result.isOk()) {
             setLoading("main");
         } else {
-            const { errors } = result as AuthenticationFailed;
-
-            setUsernameError(errors.username);
-            setPasswordError(errors.password);
+            setUsernameError(result.getError("username"));
+            setPasswordError(result.getError("password"));
         }
     };
 

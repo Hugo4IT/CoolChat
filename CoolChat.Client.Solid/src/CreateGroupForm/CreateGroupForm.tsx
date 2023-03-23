@@ -1,6 +1,6 @@
 import { Component, createSignal } from "solid-js";
 
-import styles from './CreateGroupForm.module.css';
+import styles from './CreateGroupForm.module.pcss';
 import { Form } from "../Form/Form";
 import { FormTextInput } from "../Form/FormTextInput";
 import { FormButtons } from "../Form/FormButtons";

@@ -1,7 +1,6 @@
-import { IconTypes } from "solid-icons";
-import { Component, createEffect, JSX, onMount, Ref } from "solid-js";
+import { Component, JSX } from "solid-js";
 
-import styles from "./Form.module.css";
+import styles from "./Form.module.pcss";
 
 interface FormTextInputProps {
     error?: string;

@@ -1,6 +1,6 @@
 import { Component, createEffect, createSignal, Match, on, onMount, Switch, untrack } from 'solid-js';
 
-import styles from './App.module.css';
+import styles from './App.module.pcss';
 import { LoginForm } from './LoginForm/LoginForm';
 import { AuthenticationManager } from './AuthenticationManager';
 import { Main } from './MainView/Main';

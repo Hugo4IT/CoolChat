@@ -5,7 +5,7 @@ import { AuthenticationManager } from "./AuthenticationManager";
 import { API_ROOT } from "./Globals";
 import { INotification, NotificationKind } from "./interfaces/INotification";
 
-import styles from "./NotificationsManager.module.css";
+import styles from "./NotificationsManager.module.pcss";
 
 const iconSize = 20;
 

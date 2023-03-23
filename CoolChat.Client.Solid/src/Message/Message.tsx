@@ -4,7 +4,7 @@ import { Component, onMount, Show } from "solid-js";
 import { AuthenticationManager } from "../AuthenticationManager";
 import { DateFormatter } from "../DateFormatter";
 
-import styles from "./Message.module.css";
+import styles from "./Message.module.pcss";
 
 interface MessageProps {
     author: string;

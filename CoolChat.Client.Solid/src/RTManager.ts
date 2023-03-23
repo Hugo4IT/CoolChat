@@ -6,31 +6,7 @@ import { GroupDto } from "./interfaces/GroupDto";
 import { InviteDto } from "./interfaces/InviteDto";
 import { MessageDto } from "./interfaces/MessageDto";
 import { IndexRange, LazyLoadedArray } from "./LazyLoadedArray";
-
-export class RTResponse {
-    private success: boolean;
-    private errors?: Map<string, string>;
-
-    public constructor(raw: any) {
-        this.success = raw.success;
-
-        if (!this.success) {
-            this.errors = new Map();
-
-            for (const [key, value] of Object.entries(raw.errors))
-                this.errors.set(key, value);
-        }
-    }
-
-    public isOk = () => this.success;
-    public getDefaultError = () => {
-        if (!this.errors)
-            return undefined;
-
-        return this.errors.get("default")
-            ?? <string|undefined>this.errors.values().next().value;
-    };
-}
+import { ValidationResponse } from "./ValidationResponse";
 
 export class RTManager {
     private static instance: RTManager;
@@ -41,7 +17,7 @@ export class RTManager {
     public invites: InviteDto[];
     private setInvites: SetStoreFunction<InviteDto[]>;
 
-    private connection: HubConnection;
+    private connection!: HubConnection;
     private chatCache: Map<number, LazyLoadedArray<MessageDto>>;
 
     public onMessageReceived: ((id: number, message: MessageDto) => void|PromiseLike<void>)[] = [];
@@ -51,6 +27,17 @@ export class RTManager {
     public constructor() {
         RTManager.instance = this;
 
+        window.addEventListener("close", () => {
+            this.connection.stop();
+        });
+
+        [this.groups, this.setGroups] = createStore<GroupDto[]>([]);
+        [this.invites, this.setInvites] = createStore<InviteDto[]>([]);
+
+        this.chatCache = new Map();
+    }
+
+    public load = async (setLoadText: (text: string) => void = () => {}) => {
         this.connection = new HubConnectionBuilder()
             .withUrl(`${API_ROOT}/signalr/chathub`, {
                 accessTokenFactory: async () => (await AuthenticationManager.get().getToken())!,
@@ -80,17 +67,6 @@ export class RTManager {
                 callback(group);
         });
 
-        window.addEventListener("close", () => {
-            this.connection.stop();
-        });
-
-        [this.groups, this.setGroups] = createStore<GroupDto[]>([]);
-        [this.invites, this.setInvites] = createStore<InviteDto[]>([]);
-
-        this.chatCache = new Map();
-    }
-
-    public load = async (setLoadText: (text: string) => void = () => {}) => {
         setLoadText("Connecting...");
         await this.connection.start();
         
@@ -134,16 +110,16 @@ export class RTManager {
         this.connection.send("SendMessage", id, message);
 
     public sendInvite = async (groupId: number, username: string) =>
-        new RTResponse(await this.connection.invoke("CreateInvite", groupId, username));
+        new ValidationResponse(await this.connection.invoke("CreateInvite", groupId, username));
 
     public acceptInvite = async (invite: InviteDto) =>
-        new RTResponse(await this.connection.invoke("AcceptInvite", invite.inviteId));
+        new ValidationResponse(await this.connection.invoke("AcceptInvite", invite.inviteId));
 
     public rejectInvite = async (invite: InviteDto) =>
-        new RTResponse(await this.connection.invoke("RejectInvite", invite.inviteId));
+        new ValidationResponse(await this.connection.invoke("RejectInvite", invite.inviteId));
 
     private precacheAllChats = async () => {
-        await Promise.all(this.groups.flatMap(g => g.channels.map(async c => await this.getMessages(c.chatId, 0, 100))));
+        await Promise.all(this.groups.flatMap(g => g.channels.map(async c => await this.getMessages(c.chatId, 0, 50))));
     };
 
     private newMessageLoaderFor = (id: number) => 

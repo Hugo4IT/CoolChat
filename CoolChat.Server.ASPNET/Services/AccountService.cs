@@ -1,10 +1,9 @@
-using System.Buffers.Text;
-using System.Security.Cryptography;
-using System.Text;
 using CoolChat.Domain.Interfaces;
 using CoolChat.Domain.Models;
+using Ganss.Xss;
 using Microsoft.EntityFrameworkCore;
 using BC = BCrypt.Net.BCrypt;
+using static CoolChat.Server.ASPNET.Validation;
 
 namespace CoolChat.Server.ASPNET.Services;
 
@@ -19,102 +18,90 @@ public class AccountService : IAccountService
         _logger = logger;
     }
 
-    public LoginResult CreateAccount(string username, string password)
+    public async Task<IValidationResult<Account>> CreateAccountAsync(string username, string password)
     {
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            return new LoginResult
-            {
-                Success = false,
-                UsernameError = "Enter a username",
-            };
-        }
+        username = new HtmlSanitizer().Sanitize(username).Trim();
 
-        if (password.Length < 12 || password.Length > 56)
-        {
-            return new LoginResult
-            {
-                Success = false,
-                PasswordError = "Password cannot be longer than 56 characters and must be longer than 11",
-            };
-        }
+        ValidationBuilder validation = new();
 
-        if (_dataContext.Accounts.Any(account => account.Name == username))
-        {
-            return new LoginResult
-            {
-                Success = false,
-                UsernameError = "Username unavailable",
-            };
-        }
-        
-        string hashedPassword = BC.EnhancedHashPassword(password);
+        validation.Guard(nameof(username),
+            (() => string.IsNullOrWhiteSpace(username), "Can't have an empty username"),
+            (() => username.Length > 56, "Your username may not contain more than 56 characters"),
+            (() => _dataContext.Accounts.Any(a => a.Name == username), "An account with this name already exists!"));
 
-        Account account = new Account
+        validation.Guard(nameof(password),
+            (() => password.Length < 12, "Your password must contain at least 12 characters"),
+            (() => password.Length > 56, "Your password may not contain more than 56 characters"));
+
+        if (validation.Build() is IInvalid invalid)
+            return invalid.As<Account>();
+
+        var hashedPassword = BC.EnhancedHashPassword(password);
+
+        var account = new Account
         {
             Name = username,
             Password = hashedPassword,
             Email = "",
             Messages = new List<Message>(),
-            Profile = new(),
-            Settings = new(),
+            Groups = new List<Group>(),
+            Profile = new Profile(),
+            Settings = new Settings(),
             Roles = new List<Role>(),
+            SentInvites = new List<Invite>(),
+            ReceivedInvites = new List<Invite>(),
+            WebPushSubscriptions = new List<WebPushSubscription>(),
 
-            RefreshTokenExpiryTime = DateTime.Now,
+            RefreshTokenExpiryTime = DateTime.Now
         };
 
-        _dataContext.Accounts.Add(account);
-        _dataContext.SaveChanges();
+        await _dataContext.Accounts.AddAsync(account);
+        await _dataContext.SaveChangesAsync();
 
         _logger.LogInformation($"Account created with name \"{account.Name.ToSafe()}\"");
 
-        return new LoginResult
-        {
-            Success = true,
-            Account = account,
-        };
+        return Valid(account);
     }
 
-    public LoginResult Login(string username, string password)
+    public async Task<IValidationResult<Account>> LoginAsync(string username, string password)
     {
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            return new LoginResult
-            {
-                Success = false,
-                UsernameError = "Enter a username",
-            };
-        }
+        username = new HtmlSanitizer().Sanitize(username).Trim();
 
-        Account? account = _dataContext.Accounts.FirstOrDefault(account => account.Name == username);
+        ValidationBuilder validation = new();
 
-        if (account is null)
+        validation.Guard(nameof(username),
+            (() => string.IsNullOrWhiteSpace(username), "Please enter a username"));
+
+        var account = await GetByUsernameAsync(username);
+
+        validation.Guard(nameof(username),
+            (() => account == null, $"No user exists with the name {username}"));
+
+        if (validation.Build() is IInvalid invalid)
+            return invalid.As<Account>();
+
+        if (BC.EnhancedVerify(password, account!.Password))
         {
-            return new LoginResult
-            {
-                Success = false,
-                UsernameError = $"No user exists with the name {username}",
-            };
-        }
-        
-        if (BC.EnhancedVerify(password, account.Password))
-        {
-            return new LoginResult
-            {
-                Success = true,
-                Account = account,
-            };
+            _logger.LogTrace($"\"{account.Name.ToSafe()}\" logged in");
+            return Valid(account!);
         }
 
         _logger.LogTrace($"\"{account.Name.ToSafe()}\" logged in");
-        
-        return new LoginResult
-        {
-            Success = false,
-            PasswordError = "Incorrect password",
-        };
+
+        return Invalid<Account>(nameof(password), "Invalid password");
     }
 
-    public Account? GetByUsername(string username) =>
-        _dataContext.Accounts.FirstOrDefault(a => a.Name == username);
+    public Task<Account?> GetByUsernameAsync(string username)
+    {
+        return _dataContext.Accounts.FirstOrDefaultAsync(a => a.Name == username);
+    }
+
+    public async Task<IEnumerable<Group>> GetGroupsAsync(int accountId) =>
+        await _dataContext
+            .Groups
+            .Include(g => g.Channels)
+            .Include(g => g.Members)
+            .Include(g => g.Icon)
+            .Where(g => g.Members.Any(a => a.Id == accountId))
+            .ToListAsync();
 }

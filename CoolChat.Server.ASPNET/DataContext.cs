@@ -1,10 +1,18 @@
-using Microsoft.EntityFrameworkCore;
 using CoolChat.Domain.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CoolChat.Server.ASPNET;
 
 public class DataContext : DbContext
 {
+    public DataContext()
+    {
+    }
+
+    public DataContext(DbContextOptions options) : base(options)
+    {
+    }
+
     public DbSet<Account> Accounts { get; set; } = null!;
     public DbSet<Group> Groups { get; set; } = null!;
     public DbSet<Channel> Channels { get; set; } = null!;
@@ -19,10 +27,6 @@ public class DataContext : DbContext
     public DbSet<Invite> Invites { get; set; } = null!;
     public DbSet<WebPushSubscription> WebPushSubscriptions { get; set; } = null!;
 
-    public DataContext() {}
-
-    public DataContext(DbContextOptions options) : base(options) {}
-
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Entity<Account>().HasOne(a => a.Profile);
@@ -32,7 +36,7 @@ public class DataContext : DbContext
         builder.Entity<Account>().HasMany(a => a.SentInvites).WithOne(i => i.From);
         builder.Entity<Account>().HasMany(a => a.ReceivedInvites).WithOne(i => i.To);
         builder.Entity<Account>().HasMany(a => a.WebPushSubscriptions);
-        
+
         builder.Entity<Group>().HasMany(g => g.Channels);
         builder.Entity<Group>().HasMany(g => g.Members).WithMany(a => a.Groups);
         builder.Entity<Group>().HasOne(g => g.Icon);

@@ -1,5 +1,6 @@
 import { Accessor, createEffect, createSignal, Setter } from "solid-js";
 import { API_ROOT } from "./Globals";
+import { ValidationResponse } from "./ValidationResponse";
 
 const USERNAME = "cc-lm-username";
 const AUTH_TOKEN = "cc-lm-authToken";
@@ -33,33 +34,9 @@ function isValid(token: string) {
     return (Date.now() < exp * 1000);
 }
 
-interface AuthenticationApiResponse {
-    success: boolean;
-    usernameError?: string;
-    passwordError?: string;
-
-    token: string;
+interface Tokens {
+    accessToken: string;
     refreshToken: string;
-}
-
-export abstract class AuthenticationResponse {
-    public abstract success(): boolean;
-}
-
-export class AuthenticationSuccess extends AuthenticationResponse {
-    public override success = () => true;
-}
-
-export class AuthenticationFailed extends AuthenticationResponse {
-    public override success = () => false;
-
-    public errors: { username?: string, password?: string };
-
-    constructor(usernameError: string|undefined = undefined, passwordError: string|undefined = undefined) {
-        super();
-
-        this.errors = { username: usernameError, password: passwordError };
-    }
 }
 
 export class AuthenticationManager {
@@ -196,20 +173,20 @@ export class AuthenticationManager {
         if (!response)
             return;
 
-        const { token, refreshToken } = await response.json();
+        const { accessToken, refreshToken } = await response.json();
 
-        this.setAuthToken(token);
+        this.setAuthToken(accessToken);
         this.setRefreshToken(refreshToken);
         this.setUsername(this.username()); // Force update
         this.setLoggedIn(true);
     };
 
-    public login = async (username: string, password: string): Promise<AuthenticationResponse> => {
+    public login = async (username: string, password: string): Promise<ValidationResponse> => {
         // If username is invalid, the user doesn't exist anyway
         if (validate(USERNAME_TESTS, username))
-            return new AuthenticationFailed("Unable to find user with this name");
+            return ValidationResponse.errors({ username: "Unable to find user with this name" });
         
-        const response = await fetch(`${API_ROOT}/api/Auth/Login`, {
+        let response = await fetch(`${API_ROOT}/api/Auth/Login`, {
             method: "post",
             headers: {
                 "Access-Control-Allow-Origin": "*",
@@ -225,30 +202,31 @@ export class AuthenticationManager {
         });
         
         if (!response)
-            return new AuthenticationFailed("An unknown error occurred");
+            return ValidationResponse.error("An unknown error occurred");
         
-        const auth: AuthenticationApiResponse = await response.json();
+        const vResponse = new ValidationResponse(await response.json());
 
-        if (!auth.success) {
+        if (!vResponse.isOk()) {
             this.clearTokens();
 
-            return new AuthenticationFailed(auth.usernameError, auth.passwordError);
+            return vResponse;
         }
     
-        this.setAuthToken(auth.token);
-        this.setRefreshToken(auth.refreshToken);
+        const tokens = vResponse.getValue<Tokens>()!;
+        this.setAuthToken(tokens.accessToken);
+        this.setRefreshToken(tokens.refreshToken);
         this.setUsername(username);
         this.setLoggedIn(true);
 
-        return new AuthenticationSuccess();
+        return ValidationResponse.ok();
     };
 
-    public register = async (username: string, password: string): Promise<AuthenticationResponse> => {
+    public register = async (username: string, password: string): Promise<ValidationResponse> => {
         const usernameError = validate(USERNAME_TESTS, username);
         const passwordError = validate(PASSWORD_TESTS, password);
 
         if (usernameError || passwordError)
-            return new AuthenticationFailed(usernameError, passwordError);
+            return new ValidationResponse({ success: false, errors: { username: usernameError, password: passwordError } });
 
         const response = await fetch(`${API_ROOT}/api/Auth/Register`, {
             method: "post",
@@ -266,22 +244,23 @@ export class AuthenticationManager {
         });
 
         if (!response)
-            return new AuthenticationFailed("An unknown error occurred");
+            return ValidationResponse.error("An unknown error occurred");
 
-        const auth: AuthenticationApiResponse = await response.json();
+        const vResponse = new ValidationResponse(await response.json());
 
-        if (!auth.success) {
+        if (!vResponse.isOk()) {
             this.clearTokens();
 
-            return new AuthenticationFailed(auth.usernameError, auth.passwordError);
+            return vResponse;
         }
 
-        this.setAuthToken(auth.token);
-        this.setRefreshToken(auth.refreshToken);
+        const tokens = vResponse.getValue<Tokens>()!;
+        this.setAuthToken(tokens.accessToken);
+        this.setRefreshToken(tokens.refreshToken);
         this.setUsername(username);
         this.setLoggedIn(true);
 
-        return new AuthenticationSuccess();
+        return ValidationResponse.ok();
     }
 
     public logout = async () => {

@@ -4,7 +4,7 @@ namespace CoolChat.Domain.Interfaces;
 
 public interface IChatService
 {
-    public Chat? GetById(int id);
-    public IEnumerable<Message> GetMessages(Chat chat, int start, int count);
-    public void AddMessage(Chat chat, Message message);
+    public Task<Chat?> GetByIdAsync(int id);
+    public IAsyncEnumerable<Message> GetMessagesAsync(int id, int start, int count);
+    public Task<IValidationResult> AddMessageAsync(Chat chat, Account author, string content);
 }

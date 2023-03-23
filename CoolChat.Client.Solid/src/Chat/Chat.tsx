@@ -5,9 +5,13 @@ import { Accessor, Component, createEffect, createSignal, For, onCleanup, onMoun
 import { MessageDto } from "../interfaces/MessageDto";
 import { Message } from "../Message/Message";
 
-import styles from "./Chat.module.css";
+import styles from "./Chat.module.pcss";
 import { AuthenticationManager } from "../AuthenticationManager";
 import { RTManager } from "../RTManager";
+
+function scrollToBottom(scrolledRectRef: HTMLDivElement | undefined) {
+    scrolledRectRef!.scrollTop = scrolledRectRef!.scrollHeight;
+}
 
 interface ChatProps {
     id: Accessor<number>;
@@ -23,9 +27,9 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
 
     const rt = RTManager.get();
 
-    let chatInputRef: HTMLTextAreaElement|undefined;
-    let scrolledRectRef: HTMLDivElement|undefined;
-    let emojiPickerButton: HTMLDivElement|undefined;
+    let chatInputRef: HTMLTextAreaElement | undefined;
+    let scrolledRectRef: HTMLDivElement | undefined;
+    let emojiPickerButton: HTMLDivElement | undefined;
 
     // Scroll to bottom of chat on open
     createEffect(async () => {
@@ -40,7 +44,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
         
         setMessages(m);
 
-        scrolledRectRef!.scrollTop = 999999;
+        scrollToBottom(scrolledRectRef);
     });
     
     const pushMessage = async (id: number, message: MessageDto) => {
@@ -53,7 +57,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
 
         window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
             if (scrolledRectRef!.scrollTop >= height - 50)
-                scrolledRectRef!.scrollTop = 999999999;
+                scrollToBottom(scrolledRectRef);
         }));
     };
 
@@ -61,7 +65,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
         rt.onMessageReceived.push(pushMessage);
 
         window.requestAnimationFrame(() => {
-            scrolledRectRef!.scrollTop = 999999;
+            scrollToBottom(scrolledRectRef);
         });
     });
 

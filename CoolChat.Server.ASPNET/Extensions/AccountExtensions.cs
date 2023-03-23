@@ -1,6 +1,6 @@
 using CoolChat.Domain.Models;
 
-namespace CoolChat.Server.ASPNET;
+namespace CoolChat.Server.ASPNET.Extensions;
 
 public static class AccountExtensions
 {
@@ -11,9 +11,9 @@ public static class AccountExtensions
 
         if (group.Settings.Public)
             return true;
-        
+
         return account.Roles
-                      .Where(r => r.Group.Id == group.Id)
-                      .Any(r => r.Permissions.CanAddMembers);
+            .Where(r => r.Group.Id == group.Id)
+            .Any(r => r.Permissions.CanAddMembers);
     }
 }

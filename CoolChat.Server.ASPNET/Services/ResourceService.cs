@@ -6,24 +6,24 @@ namespace CoolChat.Server.ASPNET.Services;
 
 public class ResourceService : IResourceService
 {
-    public string BasePath => Path.Join(Directory.GetCurrentDirectory(), _configuration["ResourcePath"]);
-
     private readonly IConfiguration _configuration;
     private readonly DataContext _dataContext;
-    
+
     public ResourceService(IConfiguration configuration, DataContext dataContext)
     {
         _configuration = configuration;
         _dataContext = dataContext;
     }
 
+    public string BasePath => Path.Join(Directory.GetCurrentDirectory(), _configuration["ResourcePath"]);
+
     public async Task<Resource> Upload(string filename, byte[] data)
     {
         Directory.CreateDirectory(BasePath);
-        
-        Resource resource = new Resource
+
+        var resource = new Resource
         {
-            OriginalFileName = filename,
+            OriginalFileName = filename
         };
 
         _dataContext.Resources.Add(resource);
@@ -34,6 +34,8 @@ public class ResourceService : IResourceService
         return resource;
     }
 
-    public Task<Resource?> GetById(int id) =>
-        Task.FromResult(_dataContext.Resources.FirstOrDefault(r => r.Id == id));
+    public Task<Resource?> GetById(int id)
+    {
+        return Task.FromResult(_dataContext.Resources.FirstOrDefault(r => r.Id == id));
+    }
 }

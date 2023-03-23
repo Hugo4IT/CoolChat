@@ -1,6 +1,6 @@
 import { Component, createSignal, onMount } from "solid-js";
 
-import styles from "./Form.module.css";
+import styles from "./Form.module.pcss";
 
 interface FormCheckBoxProps {
     name: string;

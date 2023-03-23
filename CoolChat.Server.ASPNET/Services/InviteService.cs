@@ -1,5 +1,6 @@
 using CoolChat.Domain.Interfaces;
 using CoolChat.Domain.Models;
+using CoolChat.Server.ASPNET.Extensions;
 using Microsoft.AspNetCore.SignalR;
 using static CoolChat.Server.ASPNET.Validation;
 
@@ -20,26 +21,26 @@ public class InviteService : IInviteService
 
     public async Task<IValidationResult<Invite>> CreateInvite(Account sender, Account? recipient, Group? group)
     {
-        IInvalid? error = null;
+        ValidationBuilder validation = new();
 
-        error ??= Guard(nameof(recipient),
-                (() => recipient == null, "This account doesn't exist"),
-                (() => sender.Id == recipient?.Id, "Can't send an invite to yourself, dummy"));
+        validation.Guard(nameof(recipient),
+            (() => recipient == null, "This account doesn't exist"),
+            (() => sender.Id == recipient?.Id, "Can't send an invite to yourself, dummy"));
 
-        error ??= Guard(nameof(group),
-                (() => group == null, "You're trying to invite this person to a group that doesn't exist"),
-                (() => !sender.CanInviteUserTo(group!), "You aren't allowed to invite people to this group"));
+        validation.Guard(nameof(group),
+            (() => group == null, "You're trying to invite this person to a group that doesn't exist"),
+            (() => !sender.CanInviteUserTo(group!), "You aren't allowed to invite people to this group"));
 
-        if (error != null)
-            return error.As<Invite>();
-        
-        Invite invite = new Invite
+        if (validation.Build() is IInvalid invalid)
+            return invalid.As<Invite>();
+
+        var invite = new Invite
         {
             From = sender,
             To = recipient!,
             Type = InviteType.Group,
             InvitedId = group!.Id,
-            Expires = DateTime.Now.AddDays(7),
+            Expires = DateTime.Now.AddDays(7)
         };
 
         _dataContext.Invites.Add(invite);
@@ -50,38 +51,38 @@ public class InviteService : IInviteService
 
     public async Task<IValidationResult> AcceptInvite(Invite invite, Account account)
     {
-        Group? group = _groupService.GetById(invite.InvitedId);
+        var group = _groupService.GetById(invite.InvitedId);
 
-        IInvalid? error = null;
-        
-        error ??= Guard(nameof(group),
+        ValidationBuilder validation = new();
+
+        validation.Guard(nameof(group),
             (() => group == null, "The group you've been invited to doesn't exist anymore"));
-        
-        error ??= Guard(nameof(invite),
-            (() => invite.Expires < DateTime.Now, "This invite has expired"),
-            (() => !invite.From.CanInviteUserTo(group!), "The account which sent you this invite isn't allowed to send invites to this server"));
 
-        error ??= Guard(nameof(account),
+        validation.Guard(nameof(invite),
+            (() => invite.Expires < DateTime.Now, "This invite has expired"),
+            (() => group != null && !invite.From.CanInviteUserTo(group!),
+                "The account which sent you this invite isn't allowed to send invites to this server"));
+
+        validation.Guard(nameof(account),
             (() => account.Id != invite.To.Id, "This invite is not for you"));
 
-        if (error != null)
-        {
-            _dataContext.Invites.Remove(invite);
-            await _dataContext.SaveChangesAsync();
-            return error;
-        }
+        var validationResult = validation.Build();
 
-        _groupService.AddMember(group!, account);
+        if (validationResult.Success)
+            _groupService.AddMember(group!, account);
+
         _dataContext.Invites.Remove(invite);
-
         await _dataContext.SaveChangesAsync();
 
-        return Valid();
+        return validationResult;
     }
 
     public async Task<IValidationResult> RejectInvite(Invite invite, Account account)
     {
-        if (Guard(nameof(invite), (() => account.Id != invite.To!.Id, "This invite is not for you")) is IInvalid invalid)
+        ValidationBuilder validation = new();
+        validation.Guard(nameof(invite), (() => account.Id != invite.To!.Id, "This invite is not for you"));
+
+        if (validation.Build() is IInvalid invalid)
             return invalid;
 
         _dataContext.Invites.Remove(invite);

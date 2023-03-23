@@ -1,27 +1,20 @@
 namespace CoolChat.Server.ASPNET;
 
 /// <summary>
-/// https://learn.microsoft.com/en-us/aspnet/signalr/overview/guide-to-the-api/mapping-users-to-connections
+///     https://learn.microsoft.com/en-us/aspnet/signalr/overview/guide-to-the-api/mapping-users-to-connections
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public class ConnectionMapping<T> where T : notnull
 {
-    private readonly Dictionary<T, HashSet<string>> _connections =
-        new Dictionary<T, HashSet<string>>();
+    private readonly Dictionary<T, HashSet<string>> _connections = new();
 
-    public int Count
-    {
-        get
-        {
-            return _connections.Count;
-        }
-    }
+    public int Count => _connections.Count;
 
     public void Add(T key, string connectionId)
     {
         lock (_connections)
         {
-            if (!_connections.TryGetValue(key, out HashSet<string>? connections))
+            if (!_connections.TryGetValue(key, out var connections))
             {
                 connections = new HashSet<string>();
                 _connections.Add(key, connections);
@@ -36,7 +29,7 @@ public class ConnectionMapping<T> where T : notnull
 
     public IEnumerable<string> GetConnections(T key)
     {
-        if (_connections.TryGetValue(key, out HashSet<string>? connections))
+        if (_connections.TryGetValue(key, out var connections))
             return connections!;
 
         return Enumerable.Empty<string>();
@@ -46,17 +39,14 @@ public class ConnectionMapping<T> where T : notnull
     {
         lock (_connections)
         {
-            if (!_connections.TryGetValue(key, out HashSet<string>? connections))
+            if (!_connections.TryGetValue(key, out var connections))
                 return;
 
             lock (connections)
             {
                 connections.Remove(connectionId);
 
-                if (connections.Count == 0)
-                {
-                    _connections.Remove(key);
-                }
+                if (connections.Count == 0) _connections.Remove(key);
             }
         }
     }

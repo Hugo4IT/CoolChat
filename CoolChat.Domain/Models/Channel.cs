@@ -2,9 +2,9 @@ namespace CoolChat.Domain.Models;
 
 public class Channel : BaseEntity
 {
-    public string Name { get; set; }
-    public int Icon { get; set; }
-    public virtual Chat Chat { get; set; }
-    public bool IsRestricted { get; set; }
-    public virtual ICollection<Role> AllowedRoles { get; set; }
+    public required string Name { get; set; }
+    public required int Icon { get; set; }
+    public virtual required Chat Chat { get; set; }
+    public required bool IsRestricted { get; set; }
+    public virtual required ICollection<Role> AllowedRoles { get; set; }
 }
