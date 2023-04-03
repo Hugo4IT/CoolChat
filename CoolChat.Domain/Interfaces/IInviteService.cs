@@ -4,7 +4,7 @@ namespace CoolChat.Domain.Interfaces;
 
 public interface IInviteService
 {
-    public Task<IValidationResult<Invite>> CreateInvite(Account sender, Account? recipient, Group? group);
-    public Task<IValidationResult> AcceptInvite(Invite invite, Account account);
-    public Task<IValidationResult> RejectInvite(Invite invite, Account account);
+    public Task<IValidationResult<Invite>> CreateInviteAsync(Account sender, Account? recipient, Group? group);
+    public Task<IValidationResult> AcceptInviteAsync(Invite invite, Account account);
+    public Task<IValidationResult> RejectInviteAsync(Invite invite, Account account);
 }

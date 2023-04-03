@@ -6,4 +6,5 @@ public class RolePermissions : BaseEntity
 
     public bool CanEditOtherUsersMessages { get; set; } = false;
     public bool CanAddMembers { get; set; } = false;
+    public bool CanAddChannels { get; set; } = false;
 }

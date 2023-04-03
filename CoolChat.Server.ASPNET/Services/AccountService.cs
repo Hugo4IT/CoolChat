@@ -1,3 +1,4 @@
+using System.Net;
 using CoolChat.Domain.Interfaces;
 using CoolChat.Domain.Models;
 using Ganss.Xss;
@@ -20,7 +21,7 @@ public class AccountService : IAccountService
 
     public async Task<IValidationResult<Account>> CreateAccountAsync(string username, string password)
     {
-        username = new HtmlSanitizer().Sanitize(username).Trim();
+        username = WebUtility.HtmlEncode(username).Trim();
 
         ValidationBuilder validation = new();
 
@@ -65,7 +66,7 @@ public class AccountService : IAccountService
 
     public async Task<IValidationResult<Account>> LoginAsync(string username, string password)
     {
-        username = new HtmlSanitizer().Sanitize(username).Trim();
+        username = WebUtility.HtmlEncode(username).Trim();
 
         ValidationBuilder validation = new();
 
@@ -100,6 +101,7 @@ public class AccountService : IAccountService
         await _dataContext
             .Groups
             .Include(g => g.Channels)
+            .ThenInclude(c => c.Chat)
             .Include(g => g.Members)
             .Include(g => g.Icon)
             .Where(g => g.Members.Any(a => a.Id == accountId))

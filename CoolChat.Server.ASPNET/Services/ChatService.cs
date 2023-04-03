@@ -1,3 +1,4 @@
+using System.Net;
 using CoolChat.Domain.Interfaces;
 using CoolChat.Domain.Models;
 using Markdig;
@@ -42,8 +43,9 @@ public class ChatService : IChatService
         if (string.IsNullOrWhiteSpace(content.Trim()))
             return Invalid("Cannot send an empty message");
 
+        content = WebUtility.HtmlEncode(content).Trim();
+        
         var pipeline = new MarkdownPipelineBuilder()
-            .DisableHtml()
             .UseSmartyPants()
             .UseTaskLists()
             .UseListExtras()

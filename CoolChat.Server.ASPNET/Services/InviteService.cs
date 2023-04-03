@@ -19,7 +19,7 @@ public class InviteService : IInviteService
         _hubContext = hubContext;
     }
 
-    public async Task<IValidationResult<Invite>> CreateInvite(Account sender, Account? recipient, Group? group)
+    public async Task<IValidationResult<Invite>> CreateInviteAsync(Account sender, Account? recipient, Group? group)
     {
         ValidationBuilder validation = new();
 
@@ -49,9 +49,9 @@ public class InviteService : IInviteService
         return Valid(invite);
     }
 
-    public async Task<IValidationResult> AcceptInvite(Invite invite, Account account)
+    public async Task<IValidationResult> AcceptInviteAsync(Invite invite, Account account)
     {
-        var group = _groupService.GetById(invite.InvitedId);
+        var group = await _groupService.GetByIdAsync(invite.InvitedId);
 
         ValidationBuilder validation = new();
 
@@ -69,7 +69,7 @@ public class InviteService : IInviteService
         var validationResult = validation.Build();
 
         if (validationResult.Success)
-            _groupService.AddMember(group!, account);
+            await _groupService.AddMemberAsync(group!, account);
 
         _dataContext.Invites.Remove(invite);
         await _dataContext.SaveChangesAsync();
@@ -77,7 +77,7 @@ public class InviteService : IInviteService
         return validationResult;
     }
 
-    public async Task<IValidationResult> RejectInvite(Invite invite, Account account)
+    public async Task<IValidationResult> RejectInviteAsync(Invite invite, Account account)
     {
         ValidationBuilder validation = new();
         validation.Guard(nameof(invite), (() => account.Id != invite.To!.Id, "This invite is not for you"));

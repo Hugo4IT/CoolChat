@@ -13,7 +13,7 @@ namespace CoolChat.Server.ASPNET;
 [Authorize]
 public class ChatHub : Hub
 {
-    private static readonly ConnectionMapping<string> _connections = new();
+    private static readonly ConnectionMapping<string> Connections = new();
     private readonly IAccountService _accountService;
     private readonly IChatService _chatService;
     private readonly DataContext _dataContext;
@@ -37,7 +37,7 @@ public class ChatHub : Hub
 
     private async Task SubscribeToGroup(string username, Group group)
     {
-        var connections = _connections.GetConnections(username).ToList();
+        var connections = Connections.GetConnections(username).ToList();
         var chatIds = group.Channels.ToList().Select(c => c.Id).ToList();
 
         // Add all connections of this user to all the group's channels
@@ -47,7 +47,7 @@ public class ChatHub : Hub
 
     private async Task UnSubscribeFromGroup(string username, Group group)
     {
-        var connections = _connections.GetConnections(username).ToList();
+        var connections = Connections.GetConnections(username).ToList();
         var chatIds = group.Channels.ToList().Select(c => c.Id).ToList();
 
         // Add all connections of this user to all the group's channels
@@ -71,9 +71,9 @@ public class ChatHub : Hub
     {
         var account = (await _accountService.GetByUsernameAsync(Context.User!.Identity!.Name!))!;
         var recipient = await _accountService.GetByUsernameAsync(to);
-        var group = _groupService.GetById(groupId);
+        var group = await _groupService.GetByIdAsync(groupId);
 
-        var result = await _inviteService.CreateInvite(account, recipient, group);
+        var result = await _inviteService.CreateInviteAsync(account, recipient, group);
 
         if (!result.Success)
             return result.Downgrade();
@@ -104,13 +104,13 @@ public class ChatHub : Hub
 
         var account = (await _accountService.GetByUsernameAsync(Context.User!.Identity!.Name!))!;
 
-        if (await _inviteService.AcceptInvite(invite, account) is IInvalid invalid)
+        if (await _inviteService.AcceptInviteAsync(invite, account) is IInvalid invalid)
         {
             _logger.LogWarning($"Failed to accept invite: {invalid.SafeFormattedErrors()}");
             return invalid;
         }
 
-        var group = _groupService.GetById(invite.InvitedId)!;
+        var group = (await _groupService.GetByIdAsync (invite.InvitedId))!;
 
         await SubscribeToGroup(account.Name, group);
         await Clients.Group($"u_{account.Id}")
@@ -128,7 +128,7 @@ public class ChatHub : Hub
 
         var account = (await _accountService.GetByUsernameAsync(Context.User!.Identity!.Name!))!;
 
-        if (await _inviteService.RejectInvite(invite, account) is IInvalid invalid)
+        if (await _inviteService.RejectInviteAsync(invite, account) is IInvalid invalid)
         {
             _logger.LogWarning($"Failed to reject invite: {invalid.SafeFormattedErrors()}");
             return invalid;
@@ -141,7 +141,7 @@ public class ChatHub : Hub
     {
         var username = Context.User!.Identity!.Name!;
         var account = (await _accountService.GetByUsernameAsync(username))!;
-        var group = _groupService.GetById(groupId);
+        var group = await _groupService.GetByIdAsync(groupId);
         
         if (group == null)
             return Invalid("This group does not exist");
@@ -158,7 +158,7 @@ public class ChatHub : Hub
     {
         var name = Context.User!.Identity!.Name!;
 
-        _connections.Add(name, Context.ConnectionId);
+        Connections.Add(name, Context.ConnectionId);
 
         var account = (await _accountService.GetByUsernameAsync(name))!;
 
@@ -172,7 +172,7 @@ public class ChatHub : Hub
     {
         var name = Context.User!.Identity!.Name!;
 
-        _connections.Remove(name, Context.ConnectionId);
+        Connections.Remove(name, Context.ConnectionId);
 
         var account = (await _accountService.GetByUsernameAsync(name))!;
 
