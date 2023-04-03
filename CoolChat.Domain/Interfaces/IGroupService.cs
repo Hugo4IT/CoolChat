@@ -8,4 +8,5 @@ public interface IGroupService
     public void AddMember(Group group, Account account);
     public void AddMembers(Group group, params Account[] accounts);
     public Group? GetById(int id);
+    public Task<bool> HasMemberAsync(Group group, Account account);
 }

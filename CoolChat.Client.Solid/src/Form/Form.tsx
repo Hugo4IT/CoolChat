@@ -1,21 +1,16 @@
-import { Component, JSX, onMount } from "solid-js";
+import { Component, JSX } from "solid-js";
 
 import styles from "./Form.module.pcss";
 
 interface FormProps {
     children: JSX.Element;
-    class?: string,
+    class?: string;
+    classList?: { [className: string]: boolean }
 };
 
 export const Form: Component<FormProps> = (props: FormProps) => {
-    let container: HTMLDivElement|undefined;
-
-    onMount(() => {
-        container!.querySelector("input")?.focus();
-    });
-    
     return (
-        <div class={[props.class ?? "", styles.Form].join(' ')} ref={container}>
+        <div class={[props.class ?? "", styles.Form].join(' ')} onLoad={event => event.currentTarget.focus()} classList={props.classList}>
             {props.children}
         </div>
     );

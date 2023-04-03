@@ -1,29 +1,29 @@
-@keyframes appear {
+@keyframes appear-up {
     0% { opacity: 0; transform: translateY(100px) }
     100% { opacity: 1; }
 }
 
-@keyframes out {
+@keyframes out-up {
     0% { opacity: 1; }
     100% { opacity: 0; transform: translateY(-100px) }
 }
 
-@keyframes appear-flip {
+@keyframes appear-down {
     0% { opacity: 0; transform: translateY(-100px) }
     100% { opacity: 1; }
 }
 
-@keyframes out-flip {
+@keyframes out-down {
     0% { opacity: 1; }
     100% { opacity: 0; transform: translateY(100px) }
 }
 
-@keyframes appear-first {
+@keyframes appear-none {
     0% { opacity: 0; transform: scale(1.1) }
     100% { opacity: 1; }
 }
 
-@keyframes out-first {
+@keyframes out-none {
     0% { opacity: 1; }
     100% { opacity: 0; transform: scale(1.1) }
 }
@@ -229,29 +229,31 @@
 }
 
 .Animated {
-    &:not(.Flip):not(.First) {
-        animation: appear 0.15s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-    }
+    &.In {
+        &.Up {
+            animation: appear-up 0.15s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+        }
+        
+        &.Down {
+            animation: appear-down 0.15s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+        }
     
-    &.Flip {
-        animation: appear-flip 0.15s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-    }
-
-    &.First {
-        animation: appear-first 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+        &.None {
+            animation: appear-none 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+        }
     }
 
     &.Out {
-        &:not(.First):not(.Flip) {
-            animation: out 0.15s cubic-bezier(0.47, 0, 0.745, 0.715) forwards;
+        &.Up {
+            animation: out-up 0.15s cubic-bezier(0.47, 0, 0.745, 0.715) forwards;
         }
         
-        &.Flip {
-            animation: out-flip 0.15s cubic-bezier(0.47, 0, 0.745, 0.715) forwards;
+        &.Down {
+            animation: out-down 0.15s cubic-bezier(0.47, 0, 0.745, 0.715) forwards;
         }
 
-        &.First {
-            animation: out-first 0.3s cubic-bezier(0.47, 0, 0.745, 0.715) forwards;
+        &.None {
+            animation: out-none 0.3s cubic-bezier(0.47, 0, 0.745, 0.715) forwards;
         }
     }
 }

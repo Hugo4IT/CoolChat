@@ -141,28 +141,37 @@ export class LazyLoadedArray<T> {
     }
 
     public pushFront = (value: T) => {
-        console.log(this.map);
         if (this.map.has(0)) {
-            console.log("1");
             const firstItem = [value, ...this.map.get(0)!];
             
             this.map.delete(0);
             this.shiftMap(1);
             this.map.set(0, firstItem);
             this.loadedRanges[0].start = 0;
-            console.log(this.map);
         } else {
-            console.log("2");
             this.shiftMap(1);
             
             this.map.set(0, [value]);
             this.loadedRanges[0] = new IndexRange(0, 1);
-            console.log(this.map);
         }
         
         this.updateLoadedRanges();
-        console.log(this.map);
     }
+
+    public pushBack = (value: T) => {
+        const highestKey = [...this.map.keys()].sort((a, b) => a - b).at(-1);
+
+        if (highestKey != undefined) {
+            this.map.get(highestKey)!.push(value);
+            this.loadedRanges.at(-1)!.end += 1;
+        } else {
+            this.shiftMap(1);
+            
+            this.map.set(0, [value]);
+            this.loadedRanges[0] = new IndexRange(0, 1);
+            this.updateLoadedRanges();
+        }
+    };
 
     public getRange = async (range: IndexRange) => {
         await this.ensureLoaded(range);

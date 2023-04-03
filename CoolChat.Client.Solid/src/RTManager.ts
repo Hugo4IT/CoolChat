@@ -37,7 +37,7 @@ export class RTManager {
         this.chatCache = new Map();
     }
 
-    public load = async (setLoadText: (text: string) => void = () => {}) => {
+    public load = async () => {
         this.connection = new HubConnectionBuilder()
             .withUrl(`${API_ROOT}/signalr/chathub`, {
                 accessTokenFactory: async () => (await AuthenticationManager.get().getToken())!,
@@ -47,7 +47,7 @@ export class RTManager {
         this.connection.on("ReceiveMessage", (id: number, author: string, content: string, date: Date) => {
             const message: MessageDto = { author: author, content: content, date: date };
             
-            this.chatCache.get(id)!.pushFront(message);
+            this.chatCache.get(id)!.pushBack(message);
 
             for (const callback of this.onMessageReceived)
                 callback(id, message);
@@ -67,19 +67,13 @@ export class RTManager {
                 callback(group);
         });
 
-        setLoadText("Connecting...");
         await this.connection.start();
         
-        setLoadText("Loading groups...");
         this.setGroups(await this.fetchGroups() ?? []);
-        setLoadText("Loading invites...");
         this.setInvites(await this.fetchInvites() ?? []);
         
         // Precache chats
-        setLoadText("Preloading chats...");
-        this.precacheAllChats();
-
-        setLoadText("Done!");
+        await this.precacheAllChats();
     };
 
     public unload = async () => {
@@ -117,6 +111,9 @@ export class RTManager {
 
     public rejectInvite = async (invite: InviteDto) =>
         new ValidationResponse(await this.connection.invoke("RejectInvite", invite.inviteId));
+    
+    public trySubscribe = async (group: GroupDto) =>
+        new ValidationResponse(await this.connection.invoke("TrySubscribeToGroup", group.id));
 
     private precacheAllChats = async () => {
         await Promise.all(this.groups.flatMap(g => g.channels.map(async c => await this.getMessages(c.chatId, 0, 50))));

@@ -14,7 +14,7 @@ function scrollToBottom(scrolledRectRef: HTMLDivElement | undefined) {
 }
 
 interface ChatProps {
-    id: Accessor<number>;
+    id: number;
     onSendMessage?: (id: number, message: string) => void;
 }
 
@@ -30,25 +30,9 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
     let chatInputRef: HTMLTextAreaElement | undefined;
     let scrolledRectRef: HTMLDivElement | undefined;
     let emojiPickerButton: HTMLDivElement | undefined;
-
-    // Scroll to bottom of chat on open
-    createEffect(async () => {
-        const id = props.id();
-
-        setMessages([]);
-
-        const m = await rt.getMessages(id, 0, 100);
-
-        if (m == messages)
-            return;
-        
-        setMessages(m);
-
-        scrollToBottom(scrolledRectRef);
-    });
     
     const pushMessage = async (id: number, message: MessageDto) => {
-        if (id != props.id())
+        if (id != props.id)
             return;
         
         const height = scrolledRectRef!.scrollHeight - scrolledRectRef!.getBoundingClientRect().height;
@@ -61,7 +45,9 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
         }));
     };
 
-    onMount(() => {
+    onMount(async () => {
+        setMessages(await rt.getMessages(props.id, 0, 50));
+
         rt.onMessageReceived.push(pushMessage);
 
         window.requestAnimationFrame(() => {
@@ -92,7 +78,7 @@ export const Chat: Component<ChatProps> = (props: ChatProps) => {
             chatInputRef!.value = "";
             chatInputRef!.rows = 1;
 
-            rt.sendMessage(props.id(), value);
+            rt.sendMessage(props.id, value);
         }
     };
 

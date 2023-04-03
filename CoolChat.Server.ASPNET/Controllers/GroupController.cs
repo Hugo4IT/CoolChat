@@ -137,7 +137,7 @@ public class GroupController : ControllerBase
     {
         var account = (await _accountService.GetByUsernameAsync(User.Identity!.Name!))!;
 
-        return Ok((await _accountService.GetGroupsAsync(account.Id)).Select(group => new GroupDto
+        return Ok((await _accountService.GetGroupsAsync(account.Id)).ToList().Select(group => new GroupDto
         {
             Id = group.Id,
             Title = group.Name,

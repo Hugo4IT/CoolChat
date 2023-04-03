@@ -13,9 +13,11 @@
     min-width: 100%;
 
     display: grid;
-    grid-template-columns: 80px 1fr;
+    grid-template-columns: min-content 1fr;
 
-    animation: appear 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    &.In {
+        animation: appear 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    }
 
     &.Out {
         animation: out 0.3s cubic-bezier(0.895, 0.03, 0.685, 0.22) forwards;
@@ -31,8 +33,19 @@
         justify-content: flex-start;
         padding: 8px;
         gap: 8px;
+
+        overflow-y: scroll;
+        overflow-x: hidden;
         
         background-color: var(--sidebar-background-color);
+
+        scrollbar-width: none;
+        -ms-scroll-style: none;
+
+        &::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
 
         .AddButton {
             display: flex;
@@ -42,20 +55,25 @@
 
         .GroupButton {
             position: relative;
+
+            flex: 0 0 64px;
             
             border: none;
             color: var(--button-color);
             border-radius: 8px;
             height: 64px;
+            width: 64px;
 
             background: none;
             background-size: contain;
             background-repeat: no-repeat;
 
+            padding: 0;
+
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
             &.GroupButtonActive {
-
+                box-shadow: 0px 0px 0px 4px var(--accent-background-7);
             }
 
             .GroupButtonTooltip {

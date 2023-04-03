@@ -137,6 +137,23 @@ public class ChatHub : Hub
         return Valid();
     }
 
+    public async Task<IValidationResult> TrySubscribeToGroup(int groupId)
+    {
+        var username = Context.User!.Identity!.Name!;
+        var account = (await _accountService.GetByUsernameAsync(username))!;
+        var group = _groupService.GetById(groupId);
+        
+        if (group == null)
+            return Invalid("This group does not exist");
+
+        if (!await _groupService.HasMemberAsync(group, account))
+            return Invalid("You do not have access to this group");
+
+        await SubscribeToGroup(username, group);
+        
+        return Valid();
+    }
+    
     public override async Task OnConnectedAsync()
     {
         var name = Context.User!.Identity!.Name!;

@@ -1,6 +1,7 @@
 using CoolChat.Domain.Interfaces;
 using CoolChat.Domain.Models;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CoolChat.Server.ASPNET.Services;
 
@@ -101,7 +102,9 @@ public class GroupService : IGroupService
         return _dataContext.Groups.FirstOrDefault(g => g.Id == id);
     }
 
-    private void UpdateGroupChatMembers(Group group)
+    public async Task<bool> HasMemberAsync(Group group, Account account) => group.Members.Contains(account);
+
+        private void UpdateGroupChatMembers(Group group)
     {
         foreach (var chat in group.Channels.Select(c => c.Chat))
             chat.Members = group.Members;

@@ -12,7 +12,9 @@
     box-sizing: border-box;
     min-height: 100%;
 
-    animation: appear 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    &.In {
+        animation: appear 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    }
 
     &.Out {
         animation: out 0.3s cubic-bezier(0.895, 0.03, 0.685, 0.22) forwards;

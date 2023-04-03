@@ -27,7 +27,7 @@ public class TokenController : ControllerBase
     [HttpPost("Refresh")]
     public async Task<IActionResult> Refresh([FromBody] Tokens parameters)
     {
-        if (parameters == null || parameters.AccessToken == null || parameters.RefreshToken == null)
+        if (parameters.AccessToken == null || parameters.RefreshToken == null)
             return BadRequest("Invalid client request");
 
         var accessToken = parameters.AccessToken;
