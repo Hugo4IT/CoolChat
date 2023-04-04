@@ -25,6 +25,7 @@
 
         .FormTextInput {
             width: 100%;
+            box-sizing: border-box;
 
             display: flex;
             flex-direction: row;
@@ -88,6 +89,47 @@
                     color: var(--button-color-hovered);
 
                     cursor: pointer;
+                }
+            }
+
+            .IconPickerList {
+                width: 100%;
+
+                padding: 4px;
+                border: none;
+                border-radius: 6px !important;
+    
+                color: var(--input-field-color);
+                background-color: var(--input-field-background-color);
+
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 4px;
+
+                /* &::after {
+                    content: "";
+                    flex: auto;
+                } */
+
+                .IconPickerItem {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    padding: 6px;
+
+                    border-radius: 4px;
+
+                    &.Active {
+                        background: linear-gradient(to bottom left,
+                                                    var(--accent-background-5),
+                                                    var(--accent-background-7));
+                    }
+
+                    &:hover {
+                        background-color: var(--oc-gray-7);
+                    }
                 }
             }
         }
@@ -186,6 +228,8 @@
         font-family: var(--display-font);
         font-size: 2rem;
         font-weight: 700;
+
+        margin-bottom: 24px;
     }
 
     .PreviewImage {

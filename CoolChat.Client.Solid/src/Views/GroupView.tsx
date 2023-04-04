@@ -1,6 +1,6 @@
 import { Accessor, createSignal, For, Match, onCleanup, onMount, Setter, Switch } from "solid-js";
 
-import { FaSolidFlag, FaSolidGear, FaSolidHashtag, FaSolidPlus, FaSolidRightFromBracket, FaSolidUser, FaSolidUserPlus, FaSolidUsers } from "solid-icons/fa";
+import { FaSolidBomb, FaSolidChartLine, FaSolidComments, FaSolidCommentSlash, FaSolidDiagramProject, FaSolidDollarSign, FaSolidFlag, FaSolidFootball, FaSolidGamepad, FaSolidGear, FaSolidGift, FaSolidHashtag, FaSolidHeart, FaSolidHouse, FaSolidImagePortrait, FaSolidLink, FaSolidLocationCrosshairs, FaSolidPaintbrush, FaSolidPaw, FaSolidPlus, FaSolidQuoteRight, FaSolidRightFromBracket, FaSolidStar, FaSolidTags, FaSolidUser, FaSolidUserPlus, FaSolidUsers } from "solid-icons/fa";
 import { Form } from "../Form/Form";
 import { FormButton } from "../Form/FormButton";
 import { FormButtons } from "../Form/FormButtons";
@@ -11,10 +11,34 @@ import { RTManager } from "../RTManager";
 import { View, ViewStateManager } from "../ViewStateManager";
 import { ChannelView } from "./ChannelView";
 import styles from "./GroupView.module.pcss";
+import { NewChannelForm } from "./NewChannelForm";
 import { PopupView } from "./PopupView";
 
 type OverlayId = "nothing" | "inviteUser";
 export type TransitionDirection = "up" | "down" | "none";
+
+export const Icons = (size: number) => [
+    <FaSolidHashtag size={size} />,
+    <FaSolidComments size={size} />,
+    <FaSolidCommentSlash size={size} />,
+    <FaSolidLink size={size} />,
+    <FaSolidPaw size={size} />,
+    <FaSolidHeart size={size} />,
+    <FaSolidGift size={size} />,
+    <FaSolidDollarSign size={size} />,
+    <FaSolidLocationCrosshairs size={size} />,
+    <FaSolidHouse size={size} />,
+    <FaSolidGamepad size={size} />,
+    <FaSolidStar size={size} />,
+    <FaSolidBomb size={size} />,
+    <FaSolidImagePortrait size={size} />,
+    <FaSolidDiagramProject size={size} />,
+    <FaSolidChartLine size={size} />,
+    <FaSolidFootball size={size} />,
+    <FaSolidPaintbrush size={size} />,
+    <FaSolidTags size={size} />,
+    <FaSolidQuoteRight size={size} />,
+];
 
 export class GroupView extends View {
     id = "GroupView";
@@ -70,6 +94,13 @@ export class GroupView extends View {
             [styles.Down]: this.transitionDirection() == "down",
             [styles.Up]: this.transitionDirection() == "up",
         });
+
+        const newChannelButton = () => {
+            if (this.localViewStateManager.busy() || ViewStateManager.get().busy())
+                return;
+
+            ViewStateManager.get().push(new NewChannelForm(this.group.id));
+        };
 
         const inviteButton = () => {
             const [value, setValue] = createSignal("");
@@ -151,7 +182,8 @@ export class GroupView extends View {
                                 {channel.name}
                             </button>
                         )}</For>
-                        <button class={[styles.ChannelButton, styles.Dim].join(' ')}>
+                        <button class={[styles.ChannelButton, styles.Dim].join(' ')}
+                            onClick={newChannelButton}>
                             <FaSolidPlus size={16} />
                             New Channel
                         </button>

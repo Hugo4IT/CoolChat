@@ -1,0 +1,22 @@
+@keyframes appear {
+    0% { opacity: 0; transform: scale(0.9); filter: blur(5px); }
+    100% { opacity: 1; }
+}
+
+@keyframes out {
+    0% { opacity: 1; }
+    100% { opacity: 0; transform: scale(0.9); filter: blur(5px); }
+}
+
+.NewChannelForm {
+    box-sizing: border-box;
+    min-height: 100%;
+
+    &.In {
+        animation: appear 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    }
+
+    &.Out {
+        animation: out 0.3s cubic-bezier(0.895, 0.03, 0.685, 0.22) forwards;
+    }
+}
