@@ -14,6 +14,7 @@ import { ChannelDto } from "../interfaces/ChannelDto";
 import { View, ViewStateManager } from "../ViewStateManager";
 import { Icons } from "./GroupView";
 import styles from './NewChannelForm.module.pcss';
+import { ValidationResponse } from "../ValidationResponse";
 
 export class NewChannelForm extends View {
     id = "NewChannelForm";
@@ -66,20 +67,28 @@ export class NewChannelForm extends View {
             requestBody.append("icon", icon().toString());
             requestBody.append("private", (!isPublic()).toString());
 
-            await fetch(`${API_ROOT}/api/AddChannel/${this.groupId}`, {
+            await fetch(`${API_ROOT}/api/Group/AddChannel/${this.groupId}`, {
                 method: "post",
                 body: requestBody,
                 ...await AuthenticationManager.authorize(),
             })
                 .then(res => res.json())
-                .then((res: ChannelDto) => {
+                .then(res => {
+                    const result = new ValidationResponse(res);
+
+                    if (result.isOk()) {
+                        ViewStateManager.get().pop();
+                    } else {
+                        setNameError(result.getError("name"));
+                    }
                     // RTManager.get().pushGroup(res);
                     // RTManager.get().trySubscribe(res);
-                    ViewStateManager.get().pop();
                 })
                 .catch(res => {
                     console.error(res);
                 });
+            
+            setLoading("nothing");
         };
 
         return (

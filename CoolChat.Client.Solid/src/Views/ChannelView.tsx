@@ -10,6 +10,9 @@ import { TransitionDirection } from "./GroupView";
 export class ChannelView extends View {
     id = "ChannelView";
 
+    public override inDelay = (_: string) => 150;
+    public override outDelay = (_: string) => 150;
+
     private channel: ChannelDto;
 
     private transitionDirection: Accessor<TransitionDirection>;

@@ -9,35 +9,26 @@ export class PopupView extends View {
     public override isOverlay: boolean = true;
 
     private content: JSX.Element;
-
-    private visible: Accessor<boolean>;
-    private setVisible: Setter<boolean>;
     
     private onClose?: () => void;
 
-    public override inDelay(_: string): number {
-        this.setVisible(true);
-
-        return 300;
-    }
-
-    public override outDelay(_: string): number {
-        this.setVisible(false);
-        
-        return 300;
-    }
+    public override inDelay = (_: string) => 300;
+    public override outDelay = (_: string) => 300;
 
     public constructor(content: JSX.Element, onClose?: () => void) {
         super();
         
         this.content = content;
         this.onClose = onClose;
-
-        [this.visible, this.setVisible] = createSignal(false);
     }
 
     view = () => {
         const tryClose = () => {
+            if (ViewStateManager.get().busy())
+                return;
+
+            window.removeEventListener("keyup", onKeyUp);
+
             if (this.onClose != undefined)
                 this.onClose();
             
@@ -51,13 +42,7 @@ export class PopupView extends View {
                 tryClose();
         };
 
-        onMount(() => {
-            window.addEventListener("keyup", onKeyUp);
-        });
-    
-        onCleanup(() => {
-            window.removeEventListener("keyup", onKeyUp);
-        });
+        window.addEventListener("keyup", onKeyUp);
 
         return (
             <div class={styles.OverlayArea} classList={{

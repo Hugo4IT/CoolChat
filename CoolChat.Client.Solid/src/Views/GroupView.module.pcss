@@ -84,11 +84,19 @@
                     background-position: 0% 0%;
                     background-size: 100% 100%;
                     background-repeat: no-repeat;
+
+                    text-shadow: 0px 2px 2px var(--accent-background-9);
+
+                    box-shadow: 0px 4px 0px 0px var(--accent-background-8);
+
+                    >svg {
+                        filter: drop-shadow(0px 2px 2px var(--accent-background-9));
+                    }
                 }
 
                 &:hover {
                     cursor: pointer;
-                    /* background: var(--channel-button-background-color-hovered); */
+                    /* background: var(--oc-gray-6); */
 
                     &.Dim {
                         background: var(--channel-button-background-color);

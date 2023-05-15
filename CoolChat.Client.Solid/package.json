@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@microsoft/signalr": "^7.0.3",
+    "eventemitter3": "^5.0.0",
     "highlight.js": "^11.7.0",
     "solid-emoji-picker": "^0.2.0",
     "solid-icons": "^1.0.4",

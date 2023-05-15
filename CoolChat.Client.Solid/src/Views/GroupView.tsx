@@ -64,8 +64,12 @@ export class GroupView extends View {
     };
 
     private group: GroupDto;
+
     private transitionDirection: Accessor<TransitionDirection>;
     public setTransitionDirection: Setter<TransitionDirection>;
+
+    private selectedChannel: Accessor<number>;
+    private setSelectedChannel: Setter<number>;
 
     private localViewStateManager: ViewStateManager;
 
@@ -78,6 +82,7 @@ export class GroupView extends View {
 
         this.group = group;
         [this.transitionDirection, this.setTransitionDirection] = createSignal(transitionDirection);
+        [this.selectedChannel, this.setSelectedChannel] = createSignal(0);
 
         this.localViewStateManager = new ViewStateManager(new ChannelView(this.group.channels.at(0)!, transitionDirection), `group_${group.id}`);
     }
@@ -85,7 +90,7 @@ export class GroupView extends View {
     view = () => {
         const rt = RTManager.get();
 
-        const [selectedChannel, setSelectedChannel] = createSignal(0);
+        const channelIcons = Icons(16);
 
         const animationClasses = () => ({
             [styles.In]: this.transition() == "in",
@@ -103,6 +108,9 @@ export class GroupView extends View {
         };
 
         const inviteButton = () => {
+            if (this.localViewStateManager.busy() || ViewStateManager.get().busy())
+                return;
+            
             const [value, setValue] = createSignal("");
             const [error, setError] = createSignal("");
             const [hasError, setHasError] = createSignal(false);
@@ -147,6 +155,26 @@ export class GroupView extends View {
             )));
         };
 
+        const channelClicked = (index: number) => {
+            if (this.selectedChannel() == index)
+                return;
+
+            if (this.localViewStateManager.busy())
+                return;
+
+            let dir: TransitionDirection = "none";
+
+            if (this.selectedChannel() != undefined)
+                dir = this.selectedChannel()! < index ? "up" : "down";
+
+            if (this.localViewStateManager.current().id == "ChannelView")
+                (this.localViewStateManager.current() as ChannelView).setTransitionDirection(dir);
+
+            this.localViewStateManager.switch(new ChannelView(this.group.channels.at(index)!, dir))
+
+            this.setSelectedChannel(index);
+        };
+
         const onMessageReceived = (id: number, message: MessageDto) => {
             if (!this.group.channels.map(c => c.chatId).includes(id))
                 return;
@@ -172,13 +200,10 @@ export class GroupView extends View {
                         <For each={this.group.channels}>{(channel, i) => (
                             <button class={styles.ChannelButton}
                                     classList={{
-                                        [styles.Active]: selectedChannel() == i(),
-                                    }}>
-                                <Switch>
-                                    <Match when={channel.icon == 0}>
-                                        <FaSolidHashtag size={16} />
-                                    </Match>
-                                </Switch>
+                                        [styles.Active]: this.selectedChannel() == i(),
+                                    }}
+                                    onClick={() => channelClicked(i())}>
+                                {channelIcons[channel.icon]}
                                 {channel.name}
                             </button>
                         )}</For>

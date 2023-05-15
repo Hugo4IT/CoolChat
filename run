@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+
+CHECKMARK='✓'
+XMARK='✕'
+UERR="An unhandled error occurred.\n"
+
+shutdown(){
+    tput cnorm
+}
+trap shutdown EXIT
+
+tput civis
+
+clear_line(){
+    echo -en "\033[2K\r"
+}
+
+loading_indicator(){
+    local LC_CTYPE=C
+    local busy_msg=$1
+    local done_msg=$2
+    local error_msg=$3
+    local pid=$4
+    local spinner='⣾⣽⣻⢿⡿⣟⣯⣷'
+
+    local i=0
+    while kill -0 $pid 2>/dev/null; do
+        local i=$(((i + 3) % 24))
+        clear_line
+        printf " %s %s" "${spinner:$i:3}" "${busy_msg}"
+        sleep 0.1
+    done
+    
+    wait $pid
+    local ret_code=$?
+
+    clear_line
+
+    if [ $ret_code ]
+    then
+        printf " ${CHECKMARK} %s\n" "${done_msg}"
+    else
+        printf " ${XMARK} %s" "${done_msg}"
+    fi
+
+    return $ret_code
+}
+
+dotnet restore > /dev/null &
+loading_indicator "Restoring backend dependencies..." "Restored backend dependencies." "${UERR}" $!
+
+dotnet user-secrets list --project CoolChat.Server.ASPNET > /dev/null &
+loading_indicator "Checking for User-Secrets..." "User-Secrets found." "User-Secrets not found." $! || {
+    dotnet user-secrets init --project CoolChat.Server.ASPNET > /dev/null && dotnet user-secrets set "SecretSigningKey" "fcnh8u4h98qehn98h" --project CoolChat.Server.ASPNET > /dev/null &
+    loading_indicator "Initializing User-Secrets..." "User-Secrets initialized." "${UERR}" $!
+}
+
+dotnet tool install --global dotnet-ef > /dev/null 2>&1 &
+loading_indicator "Installing dotnet-ef..." "dotnet-ef installed." "dotnet-ef already installed." $! || {
+    dotnet tool update --global dotnet-ef > /dev/null &
+    loading_indicator "Updating dotnet-ef" "dotnet-ef is up-to-date." "${UERR}" $!
+}
+
+dotnet ef database update --project CoolChat.Server.ASPNET > /dev/null &
+loading_indicator "Applying migrations..." "Migrations applied." "${UERR}" $!
+
+cd CoolChat.Client.Solid
+npm i > /dev/null 2>&1 &
+loading_indicator "Restoring frontend dependencies..." "Frontend dependencies up-to-date." "${UERR}" $!
+
+echo
+
+printf "Starting frontend... "
+npx vite > /dev/null 2>&1 &
+FRONTEND_PID=%%
+echo "Running."
+cd ..
+
+printf "Starting backend... "
+dotnet run --project ./CoolChat.Server.ASPNET --launch-profile http > /dev/null 2>&1 &
+BACKEND_PID=%%
+echo "Running."
+
+echo
+
+echo "Running! Go to http://localhost:3000/"
+
+tput cnorm
+
+read -p "Press <enter> to stop the servers... " </dev/tty
+
+pkill node
+kill $BACKEND_PID
+
+echo "Stopped."

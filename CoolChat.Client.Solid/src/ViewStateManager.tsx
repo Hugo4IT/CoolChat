@@ -1,4 +1,5 @@
 import { Accessor, Component, createSignal, For, Setter, Show } from "solid-js";
+import EventEmitter from "eventemitter3";
 
 export type TransitionState = "in" | "out" | "none";
 
@@ -40,21 +41,57 @@ export class ViewStateManager {
     private viewStates: Accessor<ViewState[]>;
     private setViewStates: Setter<ViewState[]>;
     
-    private isInTransition: boolean;
+    private locked: boolean;
+    private lockEventEmitter: EventEmitter;
+    private unlockListenerStack: number[];
+    private unlockListenerId: number = 0;
 
     public constructor(base: View, id: string = "@@Global") {
         ViewStateManager.instances.set(id, this);
         
         [this.viewStates, this.setViewStates] = createSignal([new ViewState(base)]);
 
-        this.isInTransition = false;
+        this.locked = false;
+        this.lockEventEmitter = new EventEmitter();
+        this.unlockListenerStack = [];        
     }
 
+    private untilUnlockedInternal = () => {
+        const id = this.unlockListenerId++;
+        this.unlockListenerStack.push(id);
+
+        return new Promise(resolve => {
+            this.lockEventEmitter.on("_unlocked", (unlockedId: number) => {
+                if (id == unlockedId)
+                    resolve({});
+            })
+        });
+    }
+
+    private lock = async () => {
+        if (this.locked)
+            await this.untilUnlockedInternal();
+        
+        this.locked = true;
+    };
+
+    private unlock = () => {
+        if (this.unlockListenerStack.length == 0) {
+            this.locked = false;
+
+            this.lockEventEmitter.emit("unlocked");
+
+            return;
+        }
+
+        this.lockEventEmitter.emit("_unlocked", this.unlockListenerStack.splice(0)[0]);
+    };
+
     public pop = async () => {
+        await this.lock();
+
         if (this.viewStates().length == 1)
             return;
-        
-        this.isInTransition = true;
         
         const lastViewState = this.viewStates().at(-1)!;
         const outDelay = lastViewState.view.outDelay(this.viewStates().at(-2)!.view.id);
@@ -81,11 +118,11 @@ export class ViewStateManager {
             viewState.view.setTransition("none");
         }
 
-        this.isInTransition = false;
+        this.unlock();
     };
 
     public push = async (view: View) => {
-        this.isInTransition = true;
+        await this.lock();
 
         if (!view.isOverlay) {
             const lastViewState = this.viewStates().at(-1)!;
@@ -115,14 +152,14 @@ export class ViewStateManager {
         viewState.setState("visible");
         viewState.view.setTransition("none");
 
-        this.isInTransition = false;
+        this.unlock();
     };
 
     public switch = async (view: View) => {
+        await this.lock();
+
         if (this.viewStates().length == 0)
             return;
-
-        this.isInTransition = true;
         
         const oldViewState = this.viewStates().at(-1)!;
 
@@ -153,14 +190,14 @@ export class ViewStateManager {
         viewState.setState("visible");
         viewState.view.setTransition("none");
 
-        this.isInTransition = false;
+        this.unlock();
     };
 
     public clear = async (view: View) => {
+        await this.lock();
+
         if (this.viewStates().length == 0 || view.isOverlay)
             return;
-        
-        this.isInTransition = true;
         
         const oldViewState = this.viewStates().at(0)!;
 
@@ -187,11 +224,12 @@ export class ViewStateManager {
         viewState.setState("visible");
         viewState.view.setTransition("none");
 
-        this.isInTransition = false;
+        this.unlock();
     };
 
     public current = () => this.viewStates().at(-1)!.view;
-    public busy = () => this.isInTransition;
+    public busy = () => this.locked;
+    public untilUnlocked = () => new Promise(resolve => this.lockEventEmitter.on("unlocked", resolve));
 
     public view: Component = () => {
         return (
