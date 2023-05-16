@@ -2,7 +2,11 @@
 
 ## Quick Setup & Run
 
-On windows, run `run.bat`. On Unix, run `run`
+Run this in Git Bash:
+
+```bash
+chmod +x run && ./run
+```
 
 ## Setup
 
