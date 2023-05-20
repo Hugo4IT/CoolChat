@@ -2,6 +2,8 @@
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N7LH6KJ)
 
+CoolChat is a chat application inspired by Discord, built with the ASP.NET framework and SolidJS for the frontend.
+
 ## Quick Setup & Run
 
 Run this in Git Bash:
