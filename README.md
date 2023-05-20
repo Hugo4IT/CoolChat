@@ -1,5 +1,7 @@
 # CoolChat
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N7LH6KJ)
+
 ## Quick Setup & Run
 
 Run this in Git Bash:
