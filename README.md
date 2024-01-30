@@ -4,13 +4,13 @@
 
 CoolChat is a chat application inspired by Discord, built with the ASP.NET framework and SolidJS for the frontend.
 
-## Quick Setup & Run
+<!-- ## Quick Setup & Run
 
 Run this in Git Bash:
 
 ```bash
 chmod +x run && ./run
-```
+``` -->
 
 ## Setup
 
