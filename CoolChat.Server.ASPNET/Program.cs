@@ -138,7 +138,7 @@ internal static class Program
             app.UseSwaggerUI();
         }
 
-        app.UseHttpLogging();
+        // app.UseHttpLogging();
         app.UseExceptionHandler();
         app.UseCors("allowApi");
         // app.UseHttpsRedirection();
