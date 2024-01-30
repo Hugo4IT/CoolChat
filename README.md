@@ -42,4 +42,4 @@ To start the ASP.NET backend, simply run
 dotnet run --project ./CoolChat.Server.ASPNET --launch-profile http
 ```
 
-To start the frontend, run `npm run dev` in the `CoolChat.Client.Solid` directory
+To start the frontend, run `npm install` and `npm run dev` in the `CoolChat.Client.Solid` directory
