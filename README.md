@@ -25,7 +25,7 @@ dotnet user-secrets set "SecretSigningKey" "{your signing key}" --project CoolCh
 You must also run the migrations, to do this first install efcore tools:
 
 ```bash
-dotnet tool install --global dotnet-ef
+dotnet tool install --global dotnet-ef --version 8.0.0
 ```
 
 Then update the database:
